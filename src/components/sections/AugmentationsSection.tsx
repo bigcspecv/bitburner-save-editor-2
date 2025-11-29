@@ -1,74 +1,8 @@
 import { useState, useMemo, useCallback, useEffect } from 'react';
-import { Card, Button, Input, NumberInput, ResetAction, Select, type SelectOption } from '../ui';
+import { Card, Button, Input, NumberInput, ResetAction } from '../ui';
 import { useSaveStore } from '../../store/save-store';
-import type { Augmentation } from '../../models/schemas/player';
-
-type AugmentationStatus = 'none' | 'installed' | 'queued';
-
-interface AugmentationData {
-  name: string;
-  level: number;
-  status: AugmentationStatus;
-  originalStatus: AugmentationStatus;
-  originalLevel: number;
-}
-
-function AugmentationCard({
-  data,
-  onStatusChange
-}: {
-  data: AugmentationData;
-  onStatusChange: (name: string, newStatus: AugmentationStatus) => void;
-}) {
-  const hasChanged = data.status !== data.originalStatus;
-
-  const statusOptions: SelectOption[] = [
-    { value: 'none', label: 'None' },
-    { value: 'queued', label: 'Queued' },
-    { value: 'installed', label: 'Installed' },
-  ];
-
-  const handleStatusChange = (value: string) => {
-    onStatusChange(data.name, value as AugmentationStatus);
-  };
-
-  const handleReset = () => {
-    onStatusChange(data.name, data.originalStatus);
-  };
-
-  return (
-    <div className={`border p-3 ${hasChanged ? 'border-terminal-secondary' : 'border-terminal-primary/40'} bg-terminal-dim/5`}>
-      <div className="flex items-start justify-between mb-2">
-        <h4 className="text-terminal-secondary uppercase tracking-wide text-sm flex-1">
-          {data.name}
-        </h4>
-        {hasChanged && (
-          <Button
-            variant="secondary"
-            size="sm"
-            onClick={handleReset}
-            title="Reset to original"
-          >
-            ↺
-          </Button>
-        )}
-      </div>
-
-      <Select
-        value={data.status}
-        onChange={handleStatusChange}
-        options={statusOptions}
-        className="w-full"
-      />
-
-      {data.level > 1 && (
-        <p className="text-terminal-dim text-xs mt-2">
-          Level: {data.level}
-        </p>
-      )}
-    </div>
-  );
-}
+import { buildAugmentationList, filterAugmentations, type AugmentationFilters } from '../../lib/augmentation-utils';
+import { AugmentationCard } from './AugmentationCard';
 
 interface NeuroFluxEditorProps {
   installedLevel: number;
@@ -215,6 +149,10 @@ export function AugmentationsSection() {
   const isLoading = status === 'loading';
 
   const [search, setSearch] = useState('');
+  const [filters, setFilters] = useState<AugmentationFilters>({
+    status: {},
+    effects: {},
+  });
 
   if (!player || !originalPlayer) {
     return (
@@ -250,70 +188,68 @@ export function AugmentationsSection() {
     };
   }, [player.augmentations, player.queuedAugmentations, originalPlayer.augmentations, originalPlayer.queuedAugmentations]);
 
-  // Build augmentation list (excluding NeuroFlux)
-  const allAugmentations = useMemo((): AugmentationData[] => {
-    const augMap = new Map<string, AugmentationData>();
+  // Build complete augmentation list with status (all 128 augmentations, excluding NeuroFlux)
+  const allAugmentations = useMemo(() => {
+    const installedAugs = player.augmentations || [];
+    const queuedAugs = player.queuedAugmentations || [];
 
-    // Process installed augmentations
-    player.augmentations?.forEach((aug) => {
-      if (aug.name === 'NeuroFlux Governor') return;
-      augMap.set(aug.name, {
-        name: aug.name,
-        level: aug.level,
-        status: 'installed',
-        originalStatus: originalPlayer.augmentations?.some(a => a.name === aug.name) ? 'installed' : 'none',
-        originalLevel: originalPlayer.augmentations?.find(a => a.name === aug.name)?.level || 0,
-      });
-    });
+    // Get all augmentations with status
+    const augsList = buildAugmentationList(installedAugs, queuedAugs);
 
-    // Process queued augmentations
-    player.queuedAugmentations?.forEach((aug) => {
-      if (aug.name === 'NeuroFlux Governor') return;
+    // Exclude NeuroFlux Governor (handled separately)
+    return augsList.filter((aug) => aug.key !== 'NeuroFluxGovernor');
+  }, [player.augmentations, player.queuedAugmentations]);
 
-      // Only set as queued if not already installed
-      if (!augMap.has(aug.name)) {
-        augMap.set(aug.name, {
-          name: aug.name,
-          level: aug.level,
-          status: 'queued',
-          originalStatus: originalPlayer.queuedAugmentations?.some(a => a.name === aug.name) ? 'queued' : 'none',
-          originalLevel: originalPlayer.queuedAugmentations?.find(a => a.name === aug.name)?.level || 0,
-        });
-      }
-    });
-
-    return Array.from(augMap.values()).sort((a, b) => a.name.localeCompare(b.name));
-  }, [player.augmentations, player.queuedAugmentations, originalPlayer.augmentations, originalPlayer.queuedAugmentations]);
+  // Track original status for change detection
+  const originalAugmentations = useMemo(() => {
+    const installedAugs = originalPlayer.augmentations || [];
+    const queuedAugs = originalPlayer.queuedAugmentations || [];
+    return buildAugmentationList(installedAugs, queuedAugs);
+  }, [originalPlayer.augmentations, originalPlayer.queuedAugmentations]);
 
   const filteredAugmentations = useMemo(() => {
-    if (!search) return allAugmentations;
-    const searchLower = search.toLowerCase();
-    return allAugmentations.filter(aug => aug.name.toLowerCase().includes(searchLower));
-  }, [allAugmentations, search]);
+    return filterAugmentations(allAugmentations, {
+      search,
+      ...filters,
+    });
+  }, [allAugmentations, search, filters]);
 
-  const handleStatusChange = useCallback((name: string, newStatus: AugmentationStatus) => {
+  const handleStatusChange = useCallback((key: string, newStatus: 'none' | 'queued' | 'installed') => {
     mutateCurrentSave((draft) => {
       const installedAugs = [...(draft.PlayerSave.data.augmentations || [])];
       const queuedAugs = [...(draft.PlayerSave.data.queuedAugmentations || [])];
 
-      // Remove from both arrays
-      const installedIndex = installedAugs.findIndex(a => a.name === name);
-      const queuedIndex = queuedAugs.findIndex(a => a.name === name);
+      // Find the augmentation data to get both key and display name
+      const aug = allAugmentations.find(a => a.key === key);
+      if (!aug) return;
 
-      if (installedIndex >= 0) installedAugs.splice(installedIndex, 1);
-      if (queuedIndex >= 0) queuedAugs.splice(queuedIndex, 1);
+      // Remove from both arrays (check both key and name)
+      const removeFromArray = (arr: Array<{ name: string; level: number }>, augKey: string, augName: string) => {
+        const index = arr.findIndex(a => a.name === augKey || a.name === augName);
+        if (index >= 0) arr.splice(index, 1);
+      };
 
-      // Add to appropriate array based on new status
+      removeFromArray(installedAugs, key, aug.name);
+      removeFromArray(queuedAugs, key, aug.name);
+
+      // Add to appropriate array based on new status (use internal key)
       if (newStatus === 'installed') {
-        installedAugs.push({ name, level: 1 });
+        installedAugs.push({ name: key, level: 1 });
       } else if (newStatus === 'queued') {
-        queuedAugs.push({ name, level: 1 });
+        queuedAugs.push({ name: key, level: 1 });
       }
 
       draft.PlayerSave.data.augmentations = installedAugs;
       draft.PlayerSave.data.queuedAugmentations = queuedAugs;
     });
-  }, [mutateCurrentSave]);
+  }, [mutateCurrentSave, allAugmentations]);
+
+  const handleAugmentationReset = useCallback((key: string) => {
+    const originalAug = originalAugmentations.find(a => a.key === key);
+    if (originalAug) {
+      handleStatusChange(key, originalAug.status);
+    }
+  }, [originalAugmentations, handleStatusChange]);
 
   const handleNeuroFluxUpdate = useCallback((installedLevel: number, queuedLevel: number) => {
     mutateCurrentSave((draft) => {
@@ -412,8 +348,8 @@ export function AugmentationsSection() {
       </Card>
 
       <Card
-        title="Other Augmentations"
-        subtitle={`${allAugmentations.length} augmentation${allAugmentations.length !== 1 ? 's' : ''} available`}
+        title="All Augmentations"
+        subtitle={`${allAugmentations.length} augmentations available in Bitburner`}
         actions={
           <ResetAction
             title="Reset Other Augmentations"
@@ -423,12 +359,102 @@ export function AugmentationsSection() {
           />
         }
       >
+        {/* Search */}
         <div className="mb-4">
           <Input
             value={search}
-            onChange={setSearch}
-            placeholder="Search augmentations..."
+            onChange={(e) => setSearch(e.target.value)}
+            placeholder="Search augmentations by name, description, or faction..."
           />
+        </div>
+
+        {/* Filters */}
+        <div className="mb-4 space-y-3">
+          {/* Status Filters */}
+          <div className="border border-terminal-primary/30 p-3">
+            <h4 className="text-terminal-secondary text-sm uppercase mb-2">Filter by Status</h4>
+            <div className="flex flex-wrap gap-2">
+              {[
+                { key: 'none', label: 'Available' },
+                { key: 'queued', label: 'Queued' },
+                { key: 'installed', label: 'Installed' },
+              ].map(({ key, label }) => (
+                <button
+                  key={key}
+                  onClick={() =>
+                    setFilters((prev) => ({
+                      ...prev,
+                      status: {
+                        ...prev.status,
+                        [key]: !prev.status?.[key as keyof typeof prev.status],
+                      },
+                    }))
+                  }
+                  className={`px-3 py-1 text-xs border font-mono transition-colors ${
+                    filters.status?.[key as keyof typeof filters.status]
+                      ? 'border-terminal-secondary bg-terminal-secondary/20 text-terminal-secondary'
+                      : 'border-terminal-primary/40 text-terminal-primary/60 hover:border-terminal-primary'
+                  }`}
+                >
+                  {label}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          {/* Effect Filters */}
+          <div className="border border-terminal-primary/30 p-3">
+            <h4 className="text-terminal-secondary text-sm uppercase mb-2">Filter by Effect</h4>
+            <div className="flex flex-wrap gap-2">
+              {[
+                { key: 'hacking', label: 'Hacking' },
+                { key: 'strength', label: 'Strength' },
+                { key: 'defense', label: 'Defense' },
+                { key: 'dexterity', label: 'Dexterity' },
+                { key: 'agility', label: 'Agility' },
+                { key: 'charisma', label: 'Charisma' },
+                { key: 'company_rep', label: 'Company Rep' },
+                { key: 'faction_rep', label: 'Faction Rep' },
+                { key: 'crime', label: 'Crime' },
+                { key: 'hacknet', label: 'Hacknet' },
+                { key: 'bladeburner', label: 'Bladeburner' },
+              ].map(({ key, label }) => (
+                <button
+                  key={key}
+                  onClick={() =>
+                    setFilters((prev) => ({
+                      ...prev,
+                      effects: {
+                        ...prev.effects,
+                        [key]: !prev.effects?.[key as keyof typeof prev.effects],
+                      },
+                    }))
+                  }
+                  className={`px-3 py-1 text-xs border font-mono transition-colors ${
+                    filters.effects?.[key as keyof typeof filters.effects]
+                      ? 'border-terminal-secondary bg-terminal-secondary/20 text-terminal-secondary'
+                      : 'border-terminal-primary/40 text-terminal-primary/60 hover:border-terminal-primary'
+                  }`}
+                >
+                  {label}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          {/* Clear Filters */}
+          {(Object.values(filters.status || {}).some(Boolean) ||
+            Object.values(filters.effects || {}).some(Boolean)) && (
+            <div className="flex justify-end">
+              <Button
+                variant="secondary"
+                size="sm"
+                onClick={() => setFilters({ status: {}, effects: {} })}
+              >
+                Clear All Filters
+              </Button>
+            </div>
+          )}
         </div>
 
         {filteredAugmentations.length === 0 ? (
@@ -438,14 +464,23 @@ export function AugmentationsSection() {
               : 'No augmentations found'}
           </p>
         ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
-            {filteredAugmentations.map((aug) => (
-              <AugmentationCard
-                key={aug.name}
-                data={aug}
-                onStatusChange={handleStatusChange}
-              />
-            ))}
+          <div className="space-y-3">
+            {filteredAugmentations.map((aug) => {
+              const originalAug = originalAugmentations.find(a => a.key === aug.key);
+              const hasChanged = originalAug?.status !== aug.status;
+
+              return (
+                <AugmentationCard
+                  key={aug.key}
+                  augmentation={aug}
+                  installedAugs={player.augmentations || []}
+                  queuedAugs={player.queuedAugmentations || []}
+                  onStatusChange={handleStatusChange}
+                  onReset={handleAugmentationReset}
+                  hasChanges={hasChanged}
+                />
+              );
+            })}
           </div>
         )}
       </Card>

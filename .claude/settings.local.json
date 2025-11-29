@@ -9,7 +9,10 @@
       "Bash(npm run build:*)",
       "Bash(npm uninstall:*)",
       "Bash(npm run preview:*)",
-      "Bash(python:*)"
+      "Bash(python:*)",
+      "Bash(mkdir:*)",
+      "Bash(cp:*)",
+      "Bash(npx tsc:*)"
     ],
     "deny": [],
     "ask": []
