@@ -8,7 +8,7 @@
     "build": "tsc -b && vite build",
     "lint": "eslint .",
     "preview": "vite preview",
-    "test": "vitest run src/lib/multiplier-calculator.test.ts"
+    "test": "vitest run src/lib/multiplier-calculator.test.ts src/lib/hp-calculator.test.ts"
   },
   "dependencies": {
     "clsx": "^2.1.1",

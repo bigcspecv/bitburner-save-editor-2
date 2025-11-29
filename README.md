@@ -122,6 +122,7 @@ The editor is organized by **gameplay concepts**, not save file structure:
   - [x] Stats & skills editor
   - [x] Money, karma, entropy
   - [x] Multipliers (read-only)
+  - [x] Health computation (current/max)
 - [ ] Servers section
   - [ ] All servers view
   - [ ] Purchased servers manager

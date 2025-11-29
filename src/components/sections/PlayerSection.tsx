@@ -3,6 +3,7 @@ import { useSaveStore } from '../../store/save-store';
 import type { PlayerSkills } from '../../models/types';
 import { computeAllMultipliers } from '../../lib/multiplier-calculator';
 import { computeAllSkillLevels } from '../../lib/level-calculator';
+import { computeHealthStats } from '../../lib/hp-calculator';
 import { useMemo } from 'react';
 
 const STAT_FIELDS: { key: keyof PlayerSkills; label: string }[] = [
@@ -37,6 +38,11 @@ export function PlayerSection() {
     return computeAllSkillLevels(player);
   }, [player]);
 
+  const healthStats = useMemo(() => {
+    if (!player) return null;
+    const defenseLevel = allSkillLevels?.find((s) => s.field === 'defense')?.calculated;
+    return computeHealthStats(player, { defenseLevelOverride: defenseLevel });
+  }, [allSkillLevels, player]);
   if (!player) {
     return (
       <Card title="Player" subtitle="Load a save file to edit player data">
@@ -51,6 +57,29 @@ export function PlayerSection() {
   const handleResourceChange = (field: ResourceField) => (value: number) => {
     updatePlayerResources({ [field]: value } as Partial<Record<ResourceField, number>>);
   };
+
+  const savedHp = originalPlayer?.hp ?? player.hp;
+  const defenseLevelForHp =
+    allSkillLevels?.find((s) => s.field === 'defense')?.calculated ?? player.skills.defense;
+  const savedHpRatio = savedHp.max > 0 ? Math.min(savedHp.current / savedHp.max, 1) : 1;
+  const maxHpComputation = healthStats?.find((h) => h.field === 'hp_max');
+  const currentHpComputation = healthStats?.find((h) => h.field === 'hp_current');
+  const maxHpCalculated = maxHpComputation?.calculated ?? savedHp.max;
+  const currentHpCalculated = currentHpComputation?.calculated ?? savedHp.current;
+  const maxHpTag = maxHpComputation
+    ? maxHpCalculated === savedHp.max
+      ? 'MATCH'
+      : maxHpCalculated > savedHp.max
+        ? 'DIFF +'
+        : 'DIFF -'
+    : null;
+  const currentHpTag = currentHpComputation
+    ? currentHpCalculated === savedHp.current
+      ? 'MATCH'
+      : currentHpCalculated > savedHp.current
+        ? 'DIFF +'
+        : 'DIFF -'
+    : null;
 
   return (
     <div className="space-y-4">
@@ -73,15 +102,59 @@ export function PlayerSection() {
                 Health
               </h4>
             </div>
-            <div className="text-terminal-primary text-sm space-y-1">
-              <p>
-                Current / Max: <span className="text-terminal-secondary">{player.hp.current}</span>
-                {' / '}
-                <span className="text-terminal-secondary">{player.hp.max}</span>
-              </p>
+            <div className="text-terminal-primary text-sm space-y-2">
+              <div>
+                <div className="flex items-center justify-between mb-1">
+                  <span className="text-terminal-secondary text-xs uppercase tracking-wide">
+                    In-Game Max HP
+                  </span>
+                  {maxHpTag && (
+                    <span className="text-terminal-dim text-2xs uppercase">
+                      {maxHpTag}
+                    </span>
+                  )}
+                </div>
+                <p>
+                  Saved (raw):{' '}
+                  <span className="text-terminal-secondary">{savedHp.max}</span>
+                </p>
+                <p>
+                  Computed (in-game):{' '}
+                  <span className="text-terminal-secondary">{maxHpCalculated}</span>
+                </p>
+                {maxHpComputation && (
+                  <p className="text-terminal-dim text-2xs">
+                    Uses defense level {defenseLevelForHp} → floor(10 + defense/10)
+                  </p>
+                )}
+              </div>
+
+              <div>
+                <div className="flex items-center justify-between mb-1">
+                  <span className="text-terminal-secondary text-xs uppercase tracking-wide">
+                    In-Game Current HP
+                  </span>
+                  {currentHpTag && (
+                    <span className="text-terminal-dim text-2xs uppercase">
+                      {currentHpTag}
+                    </span>
+                  )}
+                </div>
+                <p>
+                  Saved (raw):{' '}
+                  <span className="text-terminal-secondary">{savedHp.current}</span>
+                </p>
+                <p>
+                  Computed (in-game):{' '}
+                  <span className="text-terminal-secondary">{currentHpCalculated}</span>
+                </p>
+              </div>
+
               <p className="text-terminal-dim text-xs">
-                HP is derived at load time from other stats/multipliers; it is shown for reference and
-                not directly editable here.
+                Bitburner derives HP on load: max = floor(10 + defense/10) using the recomputed defense
+                level ({defenseLevelForHp}); current keeps the saved ratio ({(savedHpRatio * 100).toFixed(0)}%)
+                against that max. The raw save values are just placeholders; the in-game values above match what
+                you see after loading.
               </p>
             </div>
           </div>
