@@ -767,6 +767,7 @@ if (!result.success) {
 
 *Track significant updates to this context document here.*
 
+- **2025-11-29** - Augmentations section fully reimplemented with proper NeuroFlux Governor handling. CRITICAL: NeuroFlux has asymmetric storage - **installed** is a SINGLE entry with max level, **queued** is MULTIPLE entries (one per level from installed+1 to queued). Regular augmentations use status dropdown (none/queued/installed). Store uses `mutateCurrentSave` for direct array manipulation rather than individual add/remove/update methods. Separate NeuroFlux card with dual inputs; regular augs show only current save augs (no static list).
 - **2025-12-02** - HP computation now takes the greater of saved defense level and recomputed level from EXP/mults to better mirror in-game HP when save multipliers are stale; UI labels HP as in-game vs raw values.
 
 - **2025-12-01** - Player section reset button renamed to "Reset Stats & Skills" and now calls `resetPlayerStats` in the store, which only restores hp/skills/exp/mults from the original save (money/resources and other player fields remain unchanged).

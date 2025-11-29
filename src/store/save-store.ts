@@ -21,12 +21,17 @@ interface SaveStoreState {
   updatePlayerExp: (skill: keyof ParsedSaveData['PlayerSave']['data']['exp'], value: number) => void;
   updatePlayerHp: (field: keyof ParsedSaveData['PlayerSave']['data']['hp'], value: number) => void;
   updatePlayerResources: (updates: Partial<Pick<ParsedSaveData['PlayerSave']['data'], 'money' | 'karma' | 'entropy'>>) => void;
+  addAugmentation: (name: string, level: number, queued: boolean) => void;
+  removeAugmentation: (name: string, queued: boolean) => void;
+  updateAugmentationLevel: (name: string, level: number, queued: boolean) => void;
+  resetAugmentations: () => void;
   resetPlayerStats: () => void;
   resetPlayerResources: () => void;
   resetPlayer: () => void;
   hasChanges: () => boolean;
   hasPlayerStatChanges: () => boolean;
   hasPlayerResourceChanges: () => boolean;
+  hasAugmentationChanges: () => boolean;
   clearError: () => void;
 }
 
@@ -143,6 +148,70 @@ export const useSaveStore = create<SaveStoreState>((set, get) => ({
         ...updates,
       };
     });
+  },
+
+  addAugmentation(name, level, queued) {
+    get().mutateCurrentSave((draft) => {
+      const targetArray = queued
+        ? draft.PlayerSave.data.queuedAugmentations
+        : draft.PlayerSave.data.augmentations;
+
+      // Check if augmentation already exists
+      const existing = targetArray.find(aug => aug.name === name);
+      if (existing) {
+        existing.level = level;
+      } else {
+        targetArray.push({ name, level });
+      }
+    });
+  },
+
+  removeAugmentation(name, queued) {
+    get().mutateCurrentSave((draft) => {
+      const targetArray = queued
+        ? draft.PlayerSave.data.queuedAugmentations
+        : draft.PlayerSave.data.augmentations;
+
+      const index = targetArray.findIndex(aug => aug.name === name);
+      if (index !== -1) {
+        targetArray.splice(index, 1);
+      }
+    });
+  },
+
+  updateAugmentationLevel(name, level, queued) {
+    get().mutateCurrentSave((draft) => {
+      const targetArray = queued
+        ? draft.PlayerSave.data.queuedAugmentations
+        : draft.PlayerSave.data.augmentations;
+
+      const aug = targetArray.find(aug => aug.name === name);
+      if (aug) {
+        aug.level = level;
+      }
+    });
+  },
+
+  resetAugmentations() {
+    const { originalSave, currentSave } = get();
+    if (!originalSave || !currentSave) return;
+
+    const draft = cloneSave(currentSave);
+    draft.PlayerSave.data.augmentations = structuredClone(originalSave.PlayerSave.data.augmentations);
+    draft.PlayerSave.data.queuedAugmentations = structuredClone(originalSave.PlayerSave.data.queuedAugmentations);
+    set({ currentSave: draft });
+  },
+
+  hasAugmentationChanges() {
+    const { originalSave, currentSave } = get();
+    if (!originalSave || !currentSave) return false;
+
+    const snapshot = (save: ParsedSaveData) => ({
+      augmentations: save.PlayerSave.data.augmentations,
+      queuedAugmentations: save.PlayerSave.data.queuedAugmentations,
+    });
+
+    return JSON.stringify(snapshot(originalSave)) !== JSON.stringify(snapshot(currentSave));
   },
 
   resetPlayerStats() {

@@ -128,11 +128,13 @@ The editor is organized by **gameplay concepts**, not save file structure:
   - [ ] Purchased servers manager
   - [ ] Server details (RAM, money, flags)
   - [ ] Current server selector
-- [ ] Augmentations section
-  - [ ] Installed augmentations
-  - [ ] Queued augmentations
-  - [ ] NeuroFlux Governor special handling
-  - [ ] Filter by effect type
+- [x] Augmentations section
+  - [x] Installed augmentations
+  - [x] Queued augmentations
+  - [x] NeuroFlux Governor special handling
+  - [x] Add/remove augmentations
+  - [x] Search/filter functionality
+  - [ ] Filter by effect type (future enhancement)
 - [ ] Factions section
   - [ ] Membership editor
   - [ ] Reputation & favor
