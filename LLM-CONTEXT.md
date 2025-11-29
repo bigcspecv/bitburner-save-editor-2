@@ -686,6 +686,8 @@ Run tests: `npm run test`
 - **Change Tracking**: Uses JSON.stringify for deep equality
 - **No Backend**: Pure client-side app, all processing in browser
 - **Cross-Platform**: Works on Windows/Mac/Linux browsers
+- **Faction discovery values**: Real saves use `"known"`, `"unknown"`, and `"rumored"` (not `"rumor"`); normalize `"rumor"` to `"rumored"` if encountered.
+- **VersionSave type**: The stringified value parses to a JSON number (e.g., `"43"` -> `43`); accept numeric or string inputs but coerce to a number during parsing.
 
 ---
 
@@ -762,6 +764,7 @@ if (!result.success) {
 
 *Track significant updates to this context document here.*
 
+- **2025-11-29** - Adjusted schemas: faction discovery now normalizes `"rumor"`/`"rumored"` values; VersionSave coerces numeric strings to numbers for parsing.
 - **2025-11-29** - Stubbed game-centric section navigation via `GameSectionTabs` and `SectionStub` placeholders for all primary editor areas.
 - **2025-11-29** - Added Zustand save store implementation details (immutable original vs editable current, load/reset helpers) and EditorShell wiring for load/revert UX.
 - **2025-11-29** - Documented App/Layout refactor: App now toggles EditorShell vs ComponentDemo via query params; shared chrome extracted to `AppLayout.tsx`.

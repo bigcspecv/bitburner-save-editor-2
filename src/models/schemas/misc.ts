@@ -20,8 +20,17 @@ export const SettingsSaveSchema = z.object({
 
 /**
  * Version schema - save file version info
+ *
+ * Real saves store this as a JSON number; older/other variants may stringify it.
+ * Coerce both to a number to keep downstream handling consistent.
  */
-export const VersionSaveSchema = z.string();
+export const VersionSaveSchema = z.preprocess((value) => {
+  if (typeof value === 'string') {
+    const parsed = Number(value);
+    return Number.isNaN(parsed) ? value : parsed;
+  }
+  return value;
+}, z.number());
 
 /**
  * Aliases schema - terminal aliases

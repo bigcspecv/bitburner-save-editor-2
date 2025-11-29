@@ -2,8 +2,14 @@ import { z } from 'zod';
 
 /**
  * Faction discovery status
+ *
+ * Some saves use "rumored" instead of "rumor" (observed in 2.8.1+ saves),
+ * so we normalize both to "rumored" to keep the type narrow.
  */
-export const FactionDiscoverySchema = z.enum(['known', 'unknown', 'rumor']);
+export const FactionDiscoverySchema = z.preprocess(
+  (value) => (value === 'rumor' ? 'rumored' : value),
+  z.enum(['known', 'unknown', 'rumored'])
+);
 
 /**
  * Faction schema - represents a faction in the game
