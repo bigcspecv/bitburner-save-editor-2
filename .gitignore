@@ -137,3 +137,12 @@ dist
 # Vite logs files
 vite.config.js.timestamp-*
 vite.config.ts.timestamp-*
+
+# Project-specific folders
+example-save-files/
+dev-tools/
+.bitburner-src-dev/
+
+# Project-specific files
+SETUP.md
+REFACTOR_PLAN.md

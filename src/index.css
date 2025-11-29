@@ -1,0 +1,85 @@
+/* Import terminal font */
+@import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  body {
+    @apply bg-black text-terminal-primary font-mono antialiased;
+  }
+
+  * {
+    scrollbar-width: thin;
+    scrollbar-color: #00ff00 #000000;
+  }
+
+  *::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+  }
+
+  *::-webkit-scrollbar-track {
+    background: #000000;
+  }
+
+  *::-webkit-scrollbar-thumb {
+    background-color: #00ff00;
+    border-radius: 0;
+  }
+}
+
+@layer components {
+  /* Terminal CRT scanline effect */
+  .crt-scanlines::before {
+    content: '';
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(
+      to bottom,
+      rgba(255, 255, 255, 0) 50%,
+      rgba(0, 255, 0, 0.05) 50%
+    );
+    background-size: 100% 4px;
+    pointer-events: none;
+    z-index: 9999;
+    animation: scanline 8s linear infinite;
+  }
+
+  /* Text glow effect */
+  .text-glow {
+    text-shadow:
+      0 0 5px rgba(0, 255, 0, 0.8),
+      0 0 10px rgba(0, 255, 0, 0.5),
+      0 0 15px rgba(0, 255, 0, 0.3);
+  }
+
+  /* Terminal button style */
+  .btn-terminal {
+    @apply px-4 py-2 border border-terminal-primary bg-black text-terminal-primary
+           hover:bg-terminal-dim hover:text-black transition-colors duration-150
+           font-mono uppercase tracking-wider;
+  }
+
+  /* Terminal input style */
+  .input-terminal {
+    @apply bg-black border border-terminal-primary text-terminal-primary px-3 py-2
+           focus:outline-none focus:border-terminal-secondary focus:ring-1
+           focus:ring-terminal-secondary font-mono placeholder-terminal-dim;
+  }
+
+  /* Terminal card/panel */
+  .panel-terminal {
+    @apply bg-black border border-terminal-primary p-4 shadow-lg
+           shadow-terminal-primary/20;
+  }
+
+  /* Hidden demo button - requires "hacking" to reveal */
+  .hidden-demo-btn {
+    display: none;
+  }
+}
