@@ -464,21 +464,22 @@ export function AugmentationsSection() {
               : 'No augmentations found'}
           </p>
         ) : (
-          <div className="space-y-3">
+          <div className="columns-1 md:columns-2 lg:columns-3 gap-3 space-y-3">
             {filteredAugmentations.map((aug) => {
               const originalAug = originalAugmentations.find(a => a.key === aug.key);
               const hasChanged = originalAug?.status !== aug.status;
 
               return (
-                <AugmentationCard
-                  key={aug.key}
-                  augmentation={aug}
-                  installedAugs={player.augmentations || []}
-                  queuedAugs={player.queuedAugmentations || []}
-                  onStatusChange={handleStatusChange}
-                  onReset={handleAugmentationReset}
-                  hasChanges={hasChanged}
-                />
+                <div key={aug.key} className="break-inside-avoid">
+                  <AugmentationCard
+                    augmentation={aug}
+                    installedAugs={player.augmentations || []}
+                    queuedAugs={player.queuedAugmentations || []}
+                    onStatusChange={handleStatusChange}
+                    onReset={handleAugmentationReset}
+                    hasChanges={hasChanged}
+                  />
+                </div>
               );
             })}
           </div>
