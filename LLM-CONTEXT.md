@@ -127,6 +127,7 @@ src/
 - Shared header/footer/background live in `components/layout/AppLayout.tsx` so both pages stay consistent.
 - `ComponentDemo` accepts an `onExit` callback; default fallback is navigating back to the current path.
 - `EditorShell` currently holds the upload card placeholder; save loading logic should hook into it later.
+- Section navigation scaffold lives in `components/sections/GameSectionTabs.tsx` using `ControlledTabs` to enumerate all primary game-centric sections. Each tab renders a `SectionStub` (in the same folder) until the real editor UI is wired in.
 
 ---
 ## UI Architecture: Game-Centric Sections
@@ -761,6 +762,7 @@ if (!result.success) {
 
 *Track significant updates to this context document here.*
 
+- **2025-11-29** - Stubbed game-centric section navigation via `GameSectionTabs` and `SectionStub` placeholders for all primary editor areas.
 - **2025-11-29** - Added Zustand save store implementation details (immutable original vs editable current, load/reset helpers) and EditorShell wiring for load/revert UX.
 - **2025-11-29** - Documented App/Layout refactor: App now toggles EditorShell vs ComponentDemo via query params; shared chrome extracted to `AppLayout.tsx`.
 - **2025-11-28** - Initial document creation for V2 rewrite

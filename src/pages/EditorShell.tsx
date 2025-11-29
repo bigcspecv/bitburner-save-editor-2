@@ -1,5 +1,6 @@
 import { ChangeEvent } from 'react';
 import { AppLayout } from '../components/layout/AppLayout';
+import { GameSectionTabs } from '../components/sections';
 import { Button, Card, FileInput } from '../components/ui';
 import { useSaveStore } from '../store/save-store';
 
@@ -62,45 +63,49 @@ export function EditorShell({ onShowDemo }: EditorShellProps) {
           )}
         </Card>
       ) : (
-        <Card title="Save Loaded">
-          <p className="text-terminal-dim mb-4">
-            Loaded{' '}
-            <span className="text-terminal-secondary">
-              {lastFileName ?? 'save file'}
-            </span>
-            {saveFormat ? ` (${saveFormat})` : ''}. Original snapshot is preserved for full reverts.
-          </p>
-
-          <div className="flex flex-wrap items-center gap-3 mb-3">
-            <Button
-              variant="secondary"
-              onClick={resetToOriginal}
-              disabled={!hasChanges || isLoading}
-            >
-              Revert to Original
-            </Button>
-            <FileInput
-              accept=".json,.gz"
-              buttonText="Load Different File"
-              onChange={handleFileChange}
-              showFilename={false}
-              disabled={isLoading}
-            />
-          </div>
-
-          <p className="text-terminal-dim text-sm">
-            {hasChanges ? (
+        <>
+          <Card title="Save Loaded">
+            <p className="text-terminal-dim mb-4">
+              Loaded{' '}
               <span className="text-terminal-secondary">
-                Changes detected in the editable copy. Use "Revert to Original" to discard them.
+                {lastFileName ?? 'save file'}
               </span>
-            ) : (
-              'Current data matches the original save.'
+              {saveFormat ? ` (${saveFormat})` : ''}. Original snapshot is preserved for full reverts.
+            </p>
+
+            <div className="flex flex-wrap items-center gap-3 mb-3">
+              <Button
+                variant="secondary"
+                onClick={resetToOriginal}
+                disabled={!hasChanges || isLoading}
+              >
+                Revert to Original
+              </Button>
+              <FileInput
+                accept=".json,.gz"
+                buttonText="Load Different File"
+                onChange={handleFileChange}
+                showFilename={false}
+                disabled={isLoading}
+              />
+            </div>
+
+            <p className="text-terminal-dim text-sm">
+              {hasChanges ? (
+                <span className="text-terminal-secondary">
+                  Changes detected in the editable copy. Use "Revert to Original" to discard them.
+                </span>
+              ) : (
+                'Current data matches the original save.'
+              )}
+            </p>
+            {status === 'error' && error && (
+              <p className="text-red-500 mt-3 text-sm font-mono">&gt; {error}</p>
             )}
-          </p>
-          {status === 'error' && error && (
-            <p className="text-red-500 mt-3 text-sm font-mono">&gt; {error}</p>
-          )}
-        </Card>
+          </Card>
+
+          <GameSectionTabs className="mt-6" />
+        </>
       )}
     </AppLayout>
   );
