@@ -391,6 +391,40 @@ if (!result.success) {
 
 ## Terminal Theme System
 
+### CRITICAL: Always Check for Existing Components First!
+
+**BEFORE implementing any UI element (buttons, inputs, checkboxes, selects, modals, etc.):**
+
+1. **Check `src/components/ui/index.ts`** - All available UI components are exported here
+2. **Search for the component** - Use Glob to find existing components (e.g., `**/Checkbox.tsx`)
+3. **Read the component** - Understand its API and styling before using it
+4. **Use existing components** - NEVER create raw HTML elements when a styled component exists
+
+Common components available in `src/components/ui/`:
+- `Button` - Terminal-styled buttons with variants
+- `Input` - Text inputs with terminal styling
+- `NumberInput` - Number inputs with increment/decrement buttons
+- `Checkbox` - ASCII-style checkboxes with "×" mark
+- `Select` - Dropdown with search functionality
+- `Card` - Panel containers with optional title/subtitle/actions
+- `Modal`, `ConfirmModal` - Dialog boxes
+- `Tabs`, `ControlledTabs` - Tab navigation
+- `Table`, `TableRow`, `TableCell` - Data tables
+- `Textarea` - Multi-line text input
+- `FileInput` - File upload input
+- `MultiSelect` - Multiple selection dropdown
+- `Label` - Form labels
+- `ResetAction` - Reset button or "No Modifications" label
+
+**Example of what NOT to do:**
+```tsx
+// BAD - Creating raw checkbox
+<input type="checkbox" className="..." />
+
+// GOOD - Using existing Checkbox component
+<Checkbox checked={value} onChange={handler} />
+```
+
 ### Color Palette
 
 ```css
@@ -767,6 +801,8 @@ if (!result.success) {
 
 *Track significant updates to this context document here.*
 
+- **2025-11-29** - Added CRITICAL section in Terminal Theme System reminding LLMs to ALWAYS check `src/components/ui/index.ts` and search for existing components before implementing UI elements. Lists all available components with brief descriptions to prevent reimplementing existing functionality.
+- **2025-11-29** - Augmentations section now includes bulk selection/actions UI: checkboxes on cards (using `Checkbox` component), "Select All Filtered" button, and bulk status change buttons (Set Installed/Queued/None). Filters reorganized into compact single-box layout with search, status, and effect filters side-by-side (2-column grid on large screens). Clear All button positioned in upper-right of filter box.
 - **2025-11-29** - Augmentations section fully reimplemented with proper NeuroFlux Governor handling. CRITICAL: NeuroFlux has asymmetric storage - **installed** is a SINGLE entry with max level, **queued** is MULTIPLE entries (one per level from installed+1 to queued). Regular augmentations use status dropdown (none/queued/installed). Store uses `mutateCurrentSave` for direct array manipulation rather than individual add/remove/update methods. Separate NeuroFlux card with dual inputs; regular augs show only current save augs (no static list).
 - **2025-12-02** - HP computation now takes the greater of saved defense level and recomputed level from EXP/mults to better mirror in-game HP when save multipliers are stale; UI labels HP as in-game vs raw values.
 

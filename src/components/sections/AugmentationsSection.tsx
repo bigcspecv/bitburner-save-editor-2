@@ -153,6 +153,7 @@ export function AugmentationsSection() {
     status: {},
     effects: {},
   });
+  const [selectedAugmentations, setSelectedAugmentations] = useState<Set<string>>(new Set());
 
   if (!player || !originalPlayer) {
     return (
@@ -277,6 +278,33 @@ export function AugmentationsSection() {
     });
   }, [mutateCurrentSave]);
 
+  const handleToggleSelect = useCallback((key: string) => {
+    setSelectedAugmentations((prev) => {
+      const next = new Set(prev);
+      if (next.has(key)) {
+        next.delete(key);
+      } else {
+        next.add(key);
+      }
+      return next;
+    });
+  }, []);
+
+  const handleSelectAll = useCallback(() => {
+    setSelectedAugmentations(new Set(filteredAugmentations.map(a => a.key)));
+  }, [filteredAugmentations]);
+
+  const handleSelectNone = useCallback(() => {
+    setSelectedAugmentations(new Set());
+  }, []);
+
+  const handleBulkStatusChange = useCallback((newStatus: 'none' | 'queued' | 'installed') => {
+    selectedAugmentations.forEach((key) => {
+      handleStatusChange(key, newStatus);
+    });
+    setSelectedAugmentations(new Set());
+  }, [selectedAugmentations, handleStatusChange]);
+
   const installedCount = allAugmentations.filter(a => a.status === 'installed').length;
   const queuedCount = allAugmentations.filter(a => a.status === 'queued').length;
 
@@ -348,7 +376,7 @@ export function AugmentationsSection() {
       </Card>
 
       <Card
-        title="All Augmentations"
+        title="Other Augmentations"
         subtitle={`${allAugmentations.length} augmentations available in Bitburner`}
         actions={
           <ResetAction
@@ -359,102 +387,176 @@ export function AugmentationsSection() {
           />
         }
       >
-        {/* Search */}
-        <div className="mb-4">
-          <Input
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-            placeholder="Search augmentations by name, description, or faction..."
-          />
-        </div>
-
-        {/* Filters */}
-        <div className="mb-4 space-y-3">
-          {/* Status Filters */}
-          <div className="border border-terminal-primary/30 p-3">
-            <h4 className="text-terminal-secondary text-sm uppercase mb-2">Filter by Status</h4>
-            <div className="flex flex-wrap gap-2">
-              {[
-                { key: 'none', label: 'Available' },
-                { key: 'queued', label: 'Queued' },
-                { key: 'installed', label: 'Installed' },
-              ].map(({ key, label }) => (
-                <button
-                  key={key}
-                  onClick={() =>
-                    setFilters((prev) => ({
-                      ...prev,
-                      status: {
-                        ...prev.status,
-                        [key]: !prev.status?.[key as keyof typeof prev.status],
-                      },
-                    }))
-                  }
-                  className={`px-3 py-1 text-xs border font-mono transition-colors ${
-                    filters.status?.[key as keyof typeof filters.status]
-                      ? 'border-terminal-secondary bg-terminal-secondary/20 text-terminal-secondary'
-                      : 'border-terminal-primary/40 text-terminal-primary/60 hover:border-terminal-primary'
-                  }`}
-                >
-                  {label}
-                </button>
-              ))}
-            </div>
-          </div>
-
-          {/* Effect Filters */}
-          <div className="border border-terminal-primary/30 p-3">
-            <h4 className="text-terminal-secondary text-sm uppercase mb-2">Filter by Effect</h4>
-            <div className="flex flex-wrap gap-2">
-              {[
-                { key: 'hacking', label: 'Hacking' },
-                { key: 'strength', label: 'Strength' },
-                { key: 'defense', label: 'Defense' },
-                { key: 'dexterity', label: 'Dexterity' },
-                { key: 'agility', label: 'Agility' },
-                { key: 'charisma', label: 'Charisma' },
-                { key: 'company_rep', label: 'Company Rep' },
-                { key: 'faction_rep', label: 'Faction Rep' },
-                { key: 'crime', label: 'Crime' },
-                { key: 'hacknet', label: 'Hacknet' },
-                { key: 'bladeburner', label: 'Bladeburner' },
-              ].map(({ key, label }) => (
-                <button
-                  key={key}
-                  onClick={() =>
-                    setFilters((prev) => ({
-                      ...prev,
-                      effects: {
-                        ...prev.effects,
-                        [key]: !prev.effects?.[key as keyof typeof prev.effects],
-                      },
-                    }))
-                  }
-                  className={`px-3 py-1 text-xs border font-mono transition-colors ${
-                    filters.effects?.[key as keyof typeof filters.effects]
-                      ? 'border-terminal-secondary bg-terminal-secondary/20 text-terminal-secondary'
-                      : 'border-terminal-primary/40 text-terminal-primary/60 hover:border-terminal-primary'
-                  }`}
-                >
-                  {label}
-                </button>
-              ))}
-            </div>
-          </div>
-
-          {/* Clear Filters */}
-          {(Object.values(filters.status || {}).some(Boolean) ||
-            Object.values(filters.effects || {}).some(Boolean)) && (
-            <div className="flex justify-end">
+        {/* Search & Filters */}
+        <div className="mb-4 border border-terminal-primary/30 p-3">
+          <div className="flex items-start justify-between gap-3 mb-3">
+            <h4 className="text-terminal-secondary text-sm uppercase">Search & Filters</h4>
+            {(search || Object.values(filters.status || {}).some(Boolean) || Object.values(filters.effects || {}).some(Boolean)) && (
               <Button
                 variant="secondary"
                 size="sm"
-                onClick={() => setFilters({ status: {}, effects: {} })}
+                onClick={() => {
+                  setSearch('');
+                  setFilters({ status: {}, effects: {} });
+                }}
               >
-                Clear All Filters
+                Clear All
               </Button>
+            )}
+          </div>
+
+          <div className="space-y-3">
+            {/* Search */}
+            <div>
+              <Input
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+                placeholder="Search by name, description, or faction..."
+              />
             </div>
-          )}
+
+            {/* Status & Effect Filters */}
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-3">
+              {/* Status Filters */}
+              <div>
+                <label className="block text-terminal-dim text-xs mb-2 font-mono">STATUS</label>
+                <div className="flex flex-wrap gap-2">
+                  {[
+                    { key: 'none', label: 'Available' },
+                    { key: 'queued', label: 'Queued' },
+                    { key: 'installed', label: 'Installed' },
+                  ].map(({ key, label }) => (
+                    <button
+                      key={key}
+                      onClick={() =>
+                        setFilters((prev) => ({
+                          ...prev,
+                          status: {
+                            ...prev.status,
+                            [key]: !prev.status?.[key as keyof typeof prev.status],
+                          },
+                        }))
+                      }
+                      className={`px-3 py-1 text-xs border font-mono transition-colors ${
+                        filters.status?.[key as keyof typeof filters.status]
+                          ? 'border-terminal-secondary bg-terminal-secondary/20 text-terminal-secondary'
+                          : 'border-terminal-primary/40 text-terminal-primary/60 hover:border-terminal-primary'
+                      }`}
+                    >
+                      {label}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              {/* Effect Filters */}
+              <div>
+                <label className="block text-terminal-dim text-xs mb-2 font-mono">EFFECTS</label>
+                <div className="flex flex-wrap gap-2">
+                  {[
+                    { key: 'hacking', label: 'Hacking' },
+                    { key: 'strength', label: 'Strength' },
+                    { key: 'defense', label: 'Defense' },
+                    { key: 'dexterity', label: 'Dexterity' },
+                    { key: 'agility', label: 'Agility' },
+                    { key: 'charisma', label: 'Charisma' },
+                    { key: 'company_rep', label: 'Company Rep' },
+                    { key: 'faction_rep', label: 'Faction Rep' },
+                    { key: 'crime', label: 'Crime' },
+                    { key: 'hacknet', label: 'Hacknet' },
+                    { key: 'bladeburner', label: 'Bladeburner' },
+                  ].map(({ key, label }) => (
+                    <button
+                      key={key}
+                      onClick={() =>
+                        setFilters((prev) => ({
+                          ...prev,
+                          effects: {
+                            ...prev.effects,
+                            [key]: !prev.effects?.[key as keyof typeof prev.effects],
+                          },
+                        }))
+                      }
+                      className={`px-3 py-1 text-xs border font-mono transition-colors ${
+                        filters.effects?.[key as keyof typeof filters.effects]
+                          ? 'border-terminal-secondary bg-terminal-secondary/20 text-terminal-secondary'
+                          : 'border-terminal-primary/40 text-terminal-primary/60 hover:border-terminal-primary'
+                      }`}
+                    >
+                      {label}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Selection & Bulk Actions */}
+        <div className="mb-4 border border-terminal-primary/30 p-3">
+          <h4 className="text-terminal-secondary text-sm uppercase mb-3">
+            Select & Bulk Actions ({selectedAugmentations.size} selected)
+          </h4>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+            {/* Selection Controls */}
+            <div>
+              <label className="block text-terminal-dim text-xs mb-2 font-mono">
+                SELECT AUGMENTATIONS
+              </label>
+              <div className="flex flex-wrap gap-2">
+                <Button
+                  variant="secondary"
+                  size="sm"
+                  onClick={handleSelectAll}
+                  disabled={filteredAugmentations.length === 0}
+                >
+                  Select All Filtered ({filteredAugmentations.length})
+                </Button>
+                <Button
+                  variant="secondary"
+                  size="sm"
+                  onClick={handleSelectNone}
+                  disabled={selectedAugmentations.size === 0}
+                >
+                  Clear Selection
+                </Button>
+              </div>
+            </div>
+
+            {/* Bulk Actions */}
+            <div>
+              <label className="block text-terminal-dim text-xs mb-2 font-mono">
+                BULK ACTIONS
+              </label>
+              <div className="flex gap-2">
+                <Button
+                  variant="primary"
+                  size="sm"
+                  onClick={() => handleBulkStatusChange('installed')}
+                  disabled={selectedAugmentations.size === 0}
+                >
+                  Set Installed
+                </Button>
+                <Button
+                  variant="primary"
+                  size="sm"
+                  onClick={() => handleBulkStatusChange('queued')}
+                  disabled={selectedAugmentations.size === 0}
+                >
+                  Set Queued
+                </Button>
+                <Button
+                  variant="secondary"
+                  size="sm"
+                  onClick={() => handleBulkStatusChange('none')}
+                  disabled={selectedAugmentations.size === 0}
+                >
+                  Set None
+                </Button>
+              </div>
+            </div>
+          </div>
         </div>
 
         {filteredAugmentations.length === 0 ? (
@@ -478,6 +580,8 @@ export function AugmentationsSection() {
                     onStatusChange={handleStatusChange}
                     onReset={handleAugmentationReset}
                     hasChanges={hasChanged}
+                    selected={selectedAugmentations.has(aug.key)}
+                    onToggleSelect={handleToggleSelect}
                   />
                 </div>
               );

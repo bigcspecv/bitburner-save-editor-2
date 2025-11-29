@@ -1,7 +1,6 @@
 import { useMemo, useState } from "react";
 import { AugmentationWithStatus, checkPrerequisites, formatMultiplier, getEffectLabel } from "../../lib/augmentation-utils";
-import { Button } from "../ui/Button";
-import { Select } from "../ui/Select";
+import { Button, Select, Checkbox } from "../ui";
 
 interface AugmentationCardProps {
   augmentation: AugmentationWithStatus;
@@ -10,6 +9,8 @@ interface AugmentationCardProps {
   onStatusChange: (key: string, newStatus: "none" | "queued" | "installed") => void;
   onReset?: (key: string) => void;
   hasChanges?: boolean;
+  selected?: boolean;
+  onToggleSelect?: (key: string) => void;
 }
 
 export function AugmentationCard({
@@ -19,6 +20,8 @@ export function AugmentationCard({
   onStatusChange,
   onReset,
   hasChanges,
+  selected = false,
+  onToggleSelect,
 }: AugmentationCardProps) {
   const [isExpanded, setIsExpanded] = useState(false);
 
@@ -56,6 +59,14 @@ export function AugmentationCard({
     >
       {/* Header */}
       <div className="flex items-start justify-between gap-2 mb-2">
+        {onToggleSelect && (
+          <div className="flex-shrink-0">
+            <Checkbox
+              checked={selected}
+              onChange={() => onToggleSelect(augmentation.key)}
+            />
+          </div>
+        )}
         <div className="flex-1 min-w-0">
           <h3 className="text-terminal-secondary font-mono font-bold text-sm mb-1 truncate" title={augmentation.name}>
             {augmentation.name}
