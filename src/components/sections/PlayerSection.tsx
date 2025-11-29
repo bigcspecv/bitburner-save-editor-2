@@ -70,9 +70,6 @@ export function PlayerSection() {
   };
 
   const savedHp = originalPlayer?.hp ?? player.hp;
-  const defenseLevelForHp =
-    allSkillLevels?.find((s) => s.field === 'defense')?.calculated ?? player.skills.defense;
-  const savedHpRatio = savedHp.max > 0 ? Math.min(savedHp.current / savedHp.max, 1) : 1;
   const maxHpComputation = healthStats?.find((h) => h.field === 'hp_max');
   const currentHpComputation = healthStats?.find((h) => h.field === 'hp_current');
   const maxHpCalculated = maxHpComputation?.calculated ?? savedHp.max;
@@ -226,87 +223,55 @@ export function PlayerSection() {
           />
         }
       >
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
-          <div className="border border-terminal-primary/50 bg-terminal-dim/10 p-3">
-            <div className="flex items-center justify-between mb-2">
-              <h4 className="text-terminal-secondary uppercase tracking-wide text-sm">
-                Health
-              </h4>
-            </div>
-            <div className="text-terminal-primary text-sm space-y-2">
-              <div>
-                <div className="flex items-center justify-between mb-1">
-                  <span className="text-terminal-secondary text-xs uppercase tracking-wide">
-                    In-Game Max HP
+        <div className="border border-terminal-primary/50 bg-terminal-dim/10 p-3 mb-4">
+          <div className="flex items-center justify-between mb-3">
+            <h4 className="text-terminal-secondary uppercase tracking-wide text-sm">
+              Health
+            </h4>
+          </div>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="text-terminal-primary text-sm space-y-1">
+              <div className="flex items-center justify-between mb-1">
+                <span className="text-terminal-secondary text-xs uppercase tracking-wide">
+                  In-Game Max HP
+                </span>
+                {maxHpTag && (
+                  <span className="text-terminal-dim text-2xs uppercase">
+                    {maxHpTag}
                   </span>
-                  {maxHpTag && (
-                    <span className="text-terminal-dim text-2xs uppercase">
-                      {maxHpTag}
-                    </span>
-                  )}
-                </div>
-                <p>
-                  Saved (raw):{' '}
-                  <span className="text-terminal-secondary">{savedHp.max}</span>
-                </p>
-                <p>
-                  Computed (in-game):{' '}
-                  <span className="text-terminal-secondary">{maxHpCalculated}</span>
-                </p>
-                {maxHpComputation && (
-                  <p className="text-terminal-dim text-2xs">
-                    Uses defense level {defenseLevelForHp} → floor(10 + defense/10)
-                  </p>
                 )}
               </div>
+              <p>
+                Saved (raw):{' '}
+                <span className="text-terminal-secondary">{savedHp.max}</span>
+              </p>
+              <p>
+                Computed (in-game):{' '}
+                <span className="text-terminal-secondary">{maxHpCalculated}</span>
+              </p>
+            </div>
 
-              <div>
-                <div className="flex items-center justify-between mb-1">
-                  <span className="text-terminal-secondary text-xs uppercase tracking-wide">
-                    In-Game Current HP
+            <div className="text-terminal-primary text-sm space-y-1">
+              <div className="flex items-center justify-between mb-1">
+                <span className="text-terminal-secondary text-xs uppercase tracking-wide">
+                  In-Game Current HP
+                </span>
+                {currentHpTag && (
+                  <span className="text-terminal-dim text-2xs uppercase">
+                    {currentHpTag}
                   </span>
-                  {currentHpTag && (
-                    <span className="text-terminal-dim text-2xs uppercase">
-                      {currentHpTag}
-                    </span>
-                  )}
-                </div>
-                <p>
-                  Saved (raw):{' '}
-                  <span className="text-terminal-secondary">{savedHp.current}</span>
-                </p>
-                <p>
-                  Computed (in-game):{' '}
-                  <span className="text-terminal-secondary">{currentHpCalculated}</span>
-                </p>
+                )}
               </div>
-
-              <p className="text-terminal-dim text-xs">
-                Bitburner derives HP on load: max = floor(10 + defense/10) using the recomputed defense
-                level ({defenseLevelForHp}); current keeps the saved ratio ({(savedHpRatio * 100).toFixed(0)}%)
-                against that max. The raw save values are just placeholders; the in-game values above match what
-                you see after loading.
+              <p>
+                Saved (raw):{' '}
+                <span className="text-terminal-secondary">{savedHp.current}</span>
+              </p>
+              <p>
+                Computed (in-game):{' '}
+                <span className="text-terminal-secondary">{currentHpCalculated}</span>
               </p>
             </div>
           </div>
-
-          <div className="border border-terminal-primary/50 bg-terminal-dim/10 p-3">
-            <div className="flex items-center justify-between mb-2">
-              <h4 className="text-terminal-secondary uppercase tracking-wide text-sm">
-                Identity
-              </h4>
-              <span className="text-terminal-dim text-xs uppercase">
-                City: {player.city}
-              </span>
-            </div>
-            <p className="text-terminal-primary text-sm">
-              BitNode: <span className="text-terminal-secondary">{player.bitNodeN}</span>
-            </p>
-            <p className="text-terminal-dim text-xs mt-2">
-              Identity and BitNode are shown for context; gameplay multipliers are read-only for now.
-            </p>
-          </div>
-
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
