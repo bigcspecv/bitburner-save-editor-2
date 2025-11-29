@@ -142,6 +142,7 @@ vite.config.ts.timestamp-*
 example-save-files/
 dev-tools/
 .bitburner-src-dev/
+.bitburner-save-editor-v1/
 
 # Project-specific files
 SETUP.md

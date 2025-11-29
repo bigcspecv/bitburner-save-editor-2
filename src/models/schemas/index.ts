@@ -55,6 +55,19 @@ export const ParsedSaveDataSchema = z.object({
 
 export type ParsedSaveData = z.infer<typeof ParsedSaveDataSchema>;
 
+const OPTIONAL_SAVE_KEYS: Set<string> = new Set([
+  'StockMarketSave',
+  'SettingsSave',
+  'VersionSave',
+  'AliasesSave',
+  'GlobalAliasesSave',
+  'AllGangsSave',
+  'LastExportBonus',
+  'StaneksGiftSave',
+  'GoSave',
+  'InfiltrationsSave',
+]);
+
 /**
  * Validates the raw BitburnerSaveObject structure
  */
@@ -72,6 +85,14 @@ export function parseSaveData(rawSave: z.infer<typeof BitburnerSaveObjectSchema>
 
   for (const [key, stringifiedValue] of Object.entries(rawSave.data)) {
     try {
+      const trimmed = stringifiedValue.trim();
+
+      // Some optional sections (e.g., AllGangsSave when never unlocked) serialize as empty strings.
+      // Skip parsing those so optional schema fields remain undefined instead of throwing.
+      if (trimmed === '' && OPTIONAL_SAVE_KEYS.has(key)) {
+        continue;
+      }
+
       parsed[key] = JSON.parse(stringifiedValue);
     } catch (error) {
       throw new Error(`Failed to parse save section "${key}": ${error}`);
@@ -91,6 +112,13 @@ export function serializeSaveData(parsedData: ParsedSaveData): z.infer<typeof Bi
   for (const [key, value] of Object.entries(parsedData)) {
     if (value !== undefined) {
       data[key] = JSON.stringify(value);
+    }
+  }
+
+  // Preserve optional sections even when absent (Bitburner includes these keys with empty strings).
+  for (const key of OPTIONAL_SAVE_KEYS) {
+    if (!(key in data)) {
+      data[key] = '';
     }
   }
 

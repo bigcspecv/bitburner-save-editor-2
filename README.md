@@ -113,14 +113,14 @@ The editor is organized by **gameplay concepts**, not save file structure:
   - [x] Table component
   - [x] Modal component
   - [x] Tabs component
-  - [x] Component demo page
+- [x] Component demo page
 - [x] Save file loader (gzip/base64/JSON)
-- [ ] Save file exporter
+- [x] Save file exporter
 - [x] State management (Zustand or Context)
 - [x] Section navigation scaffold (tabs + stubs)
 - [ ] Player section
-  - [ ] Stats & skills editor
-  - [ ] Money, karma, entropy
+  - [x] Stats & skills editor
+  - [x] Money, karma, entropy
   - [ ] Multipliers (read-only)
 - [ ] Servers section
   - [ ] All servers view

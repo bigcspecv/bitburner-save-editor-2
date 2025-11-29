@@ -2,6 +2,7 @@ import { ChangeEvent } from 'react';
 import { AppLayout } from '../components/layout/AppLayout';
 import { GameSectionTabs } from '../components/sections';
 import { Button, Card, FileInput } from '../components/ui';
+import { downloadSaveFile } from '../lib/save-exporter';
 import { useSaveStore } from '../store/save-store';
 
 interface EditorShellProps {
@@ -17,6 +18,9 @@ export function EditorShell({ onShowDemo }: EditorShellProps) {
   const error = useSaveStore((state) => state.error);
   const lastFileName = useSaveStore((state) => state.lastFileName);
   const saveFormat = useSaveStore((state) => state.saveFormat);
+  const currentSave = useSaveStore((state) => state.currentSave);
+  const originalSave = useSaveStore((state) => state.originalSave);
+  const originalRawData = useSaveStore((state) => state.originalRawData);
   const loadFromFile = useSaveStore((state) => state.loadFromFile);
   const resetToOriginal = useSaveStore((state) => state.resetToOriginal);
   const hasChanges = useSaveStore((state) => state.hasChanges());
@@ -28,6 +32,20 @@ export function EditorShell({ onShowDemo }: EditorShellProps) {
     if (!selectedFile) return;
 
     await loadFromFile(selectedFile);
+  };
+
+  const handleDownload = () => {
+    if (!currentSave) return;
+
+    const exportFormat = saveFormat === 'gzipped' ? 'json-gz' : saveFormat === 'base64' ? 'base64' : 'json';
+    const baseName = lastFileName?.replace(/(\.json(\.gz)?)$/i, '') ?? 'bitburnerSave';
+    const extension = exportFormat === 'json-gz' ? '.json.gz' : '.json';
+    const fileName = `${baseName}_HaCk3D${extension}`;
+
+    downloadSaveFile(currentSave, fileName, exportFormat, {
+      originalParsed: originalSave,
+      originalRawData,
+    });
   };
 
   return (
@@ -81,6 +99,14 @@ export function EditorShell({ onShowDemo }: EditorShellProps) {
               >
                 Revert to Original
               </Button>
+              {hasChanges ? (
+                <Button
+                  onClick={handleDownload}
+                  disabled={!currentSave || isLoading}
+                >
+                  Download Modified Save
+                </Button>
+              ) : null}
               <FileInput
                 accept=".json,.gz"
                 buttonText="Load Different File"

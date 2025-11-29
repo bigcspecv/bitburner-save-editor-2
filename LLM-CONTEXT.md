@@ -688,6 +688,7 @@ Run tests: `npm run test`
 - **Cross-Platform**: Works on Windows/Mac/Linux browsers
 - **Faction discovery values**: Real saves use `"known"`, `"unknown"`, and `"rumored"` (not `"rumor"`); normalize `"rumor"` to `"rumored"` if encountered.
 - **VersionSave type**: The stringified value parses to a JSON number (e.g., `"43"` -> `43`); accept numeric or string inputs but coerce to a number during parsing.
+- **Player multipliers**: These are derived (augs/bitnode/source files/entropy) and should remain read-only; if displayed before recalculation wiring exists, label as informational/not recalculated yet.
 
 ---
 
@@ -764,6 +765,15 @@ if (!result.success) {
 
 *Track significant updates to this context document here.*
 
+- **2025-11-29** - Player section now includes stats/exp editor plus money/karma/entropy controls; added save-store helpers (`updatePlayerSkill/Exp/Hp/Resources`, `resetPlayer` clones original PlayerSave).
+- **2025-11-29** - HP editing now auto-raises max HP when current HP is set above it (`updatePlayerHp` logic in save store) to keep values consistent.
+- **2025-11-29** - Player HP now displayed read-only in the UI with note (Bitburner recomputes HP from stats on load); editing removed from Player section.
+- **2025-11-29** - Save parsing now treats empty strings for optional sections (e.g., AllGangsSave) as absent instead of throwing JSON parse errors; optional keys set documented in `parseSaveData`.
+- **2025-11-29** - Editor shell now shows "Download Modified Save" when there are changes; uses `downloadSaveFile` with format derived from original (gzipped -> json-gz, else json) and filename based on uploaded name.
+- **2025-11-29** - Downloaded save filenames now append `_HaCk3D` before the extension (e.g., `name_HaCk3D.json` or `name_HaCk3D.json.gz`).
+- **2025-11-29** - Save export now preserves optional save section keys (StockMarket/Settings/Version/Aliases/GlobalAliases/AllGangs/LastExportBonus/StaneksGift/Go/Infiltrations) as empty strings if absent, matching Bitburner’s expected key set on import.
+- **2025-11-29** - Export now reuses original raw section strings when unchanged (uses original parsed + raw data captured on load) to minimize diffs; loadFromFile stores originalRawData alongside parsed saves.
+- **2025-11-29** - Export supports base64 output to mirror original save format (`base64` when original format detected as base64); download button picks format based on detected save type.
 - **2025-11-29** - Adjusted schemas: faction discovery now normalizes `"rumor"`/`"rumored"` values; VersionSave coerces numeric strings to numbers for parsing.
 - **2025-11-29** - Stubbed game-centric section navigation via `GameSectionTabs` and `SectionStub` placeholders for all primary editor areas.
 - **2025-11-29** - Added Zustand save store implementation details (immutable original vs editable current, load/reset helpers) and EditorShell wiring for load/revert UX.

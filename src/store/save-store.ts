@@ -1,12 +1,14 @@
 import { create } from 'zustand';
-import { detectSaveFormat, loadAndParseSaveFile } from '../lib/save-loader';
+import { detectSaveFormat, loadAndParseSaveFile, loadSaveFile } from '../lib/save-loader';
 import type { ParsedSaveData, SaveFormat } from '../models/types';
+import type { BitburnerSaveObject } from '../models/schemas';
 
 type SaveStatus = 'idle' | 'loading' | 'ready' | 'error';
 
 interface SaveStoreState {
   originalSave: ParsedSaveData | null;
   currentSave: ParsedSaveData | null;
+  originalRawData: BitburnerSaveObject['data'] | null;
   saveFormat: SaveFormat | null;
   lastFileName: string | null;
   status: SaveStatus;
@@ -16,6 +18,11 @@ interface SaveStoreState {
   resetToOriginal: () => void;
   replaceCurrentSave: (nextSave: ParsedSaveData) => void;
   mutateCurrentSave: (mutator: (draft: ParsedSaveData) => void) => void;
+  updatePlayerSkill: (skill: keyof ParsedSaveData['PlayerSave']['data']['skills'], value: number) => void;
+  updatePlayerExp: (skill: keyof ParsedSaveData['PlayerSave']['data']['exp'], value: number) => void;
+  updatePlayerHp: (field: keyof ParsedSaveData['PlayerSave']['data']['hp'], value: number) => void;
+  updatePlayerResources: (updates: Partial<Pick<ParsedSaveData['PlayerSave']['data'], 'money' | 'karma' | 'entropy'>>) => void;
+  resetPlayer: () => void;
   hasChanges: () => boolean;
   clearError: () => void;
 }
@@ -51,6 +58,7 @@ async function determineFormat(file: File): Promise<SaveFormat> {
 export const useSaveStore = create<SaveStoreState>((set, get) => ({
   originalSave: null,
   currentSave: null,
+  originalRawData: null,
   saveFormat: null,
   lastFileName: null,
   status: 'idle',
@@ -60,8 +68,9 @@ export const useSaveStore = create<SaveStoreState>((set, get) => ({
     set({ status: 'loading', error: null });
 
     try {
-      const [format, parsed] = await Promise.all([
+      const [format, rawSave, parsed] = await Promise.all([
         determineFormat(file),
+        loadSaveFile(file),
         loadAndParseSaveFile(file),
       ]);
 
@@ -71,6 +80,7 @@ export const useSaveStore = create<SaveStoreState>((set, get) => ({
       set({
         originalSave: immutableOriginal,
         currentSave: editableCopy,
+        originalRawData: rawSave.data,
         saveFormat: format,
         lastFileName: file.name,
         status: 'ready',
@@ -101,6 +111,49 @@ export const useSaveStore = create<SaveStoreState>((set, get) => ({
 
     const draft = cloneSave(currentSave);
     mutator(draft);
+    set({ currentSave: draft });
+  },
+
+  updatePlayerSkill(skill, value) {
+    get().mutateCurrentSave((draft) => {
+      draft.PlayerSave.data.skills[skill] = value;
+    });
+  },
+
+  updatePlayerExp(skill, value) {
+    get().mutateCurrentSave((draft) => {
+      draft.PlayerSave.data.exp[skill] = value;
+    });
+  },
+
+  updatePlayerHp(field, value) {
+    get().mutateCurrentSave((draft) => {
+      if (field === 'current') {
+        draft.PlayerSave.data.hp.current = value;
+        if (value > draft.PlayerSave.data.hp.max) {
+          draft.PlayerSave.data.hp.max = value;
+        }
+      } else {
+        draft.PlayerSave.data.hp[field] = value;
+      }
+    });
+  },
+
+  updatePlayerResources(updates) {
+    get().mutateCurrentSave((draft) => {
+      draft.PlayerSave.data = {
+        ...draft.PlayerSave.data,
+        ...updates,
+      };
+    });
+  },
+
+  resetPlayer() {
+    const { originalSave, currentSave } = get();
+    if (!originalSave || !currentSave) return;
+
+    const draft = cloneSave(currentSave);
+    draft.PlayerSave = cloneSave(originalSave.PlayerSave);
     set({ currentSave: draft });
   },
 
