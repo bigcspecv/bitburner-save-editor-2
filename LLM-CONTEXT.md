@@ -690,7 +690,7 @@ Run tests: `npm run test`
 - **VersionSave type**: The stringified value parses to a JSON number (e.g., `"43"` -> `43`); accept numeric or string inputs but coerce to a number during parsing.
 - **Player multipliers**: These are derived (augs/bitnode/source files/entropy) and should remain read-only; if displayed before recalculation wiring exists, label as informational/not recalculated yet.
 - **Multiplier calculator**: `src/lib/multiplier-calculator.ts` recomputes all player multipliers from Source-File 1/2/5 (see field coverage), BitNode HackingLevelMultiplier (where applicable), exploit bonuses (1.001^exploits on eligible fields), and augs we currently map (NFG across all, BitWire, Neurotrainer I exp bonuses, Synaptic Enhancement Implant hacking_speed) plus donation bonus. Player section shows saved vs computed multipliers with rounding/tolerance; vitest in `src/lib/multiplier-calculator.test.ts`.
-- **Player skill levels**: All skill levels (hacking/combat/cha) are recomputed from EXP and multipliers on load; editing level values in the save has no lasting effect. UI should treat levels as read-only and surface EXP editing instead.
+- **Player skill levels**: All skill levels (hacking/combat/cha) are recomputed from EXP and multipliers on load; editing level values in the save has no lasting effect. UI should treat levels as read-only and surface EXP editing instead. `src/lib/level-calculator.ts` mirrors the in-game formula (32*log(exp+534.6)-200 with clamp) and applies BitNode LevelMultipliers (BN2/3 hacking 0.8, BN6/7 hacking 0.35, BN9 hacking 0.5 + combat/cha 0.45, BN10 hacking 0.35 + others 0.4, BN11 hacking 0.6, BN12 all stats decaying by 1.02^level, BN13 hacking 0.25 + combat 0.7, BN14 hacking 0.4 + combat 0.5). It uses active source file level for the current BitNode (overrides respected) to drive BN12 decay. Player section now shows original saved level vs computed level per stat.
 
 ---
 
@@ -766,6 +766,8 @@ if (!result.success) {
 ## Document Maintenance Log
 
 *Track significant updates to this context document here.*
+
+- **2025-11-30** - Added skill level calculator (`src/lib/level-calculator.ts`) with BitNode LevelMultipliers (SF override aware) and wired Player stats UI to show original saved level vs computed level per stat alongside EXP editors.
 
 - **2025-11-29** - Added hacking multiplier calculator helper plus UI/readout (saved vs computed) and a vitest for sample save; future multipliers can extend the helper.
 - **2025-11-29** - Player stat level inputs removed; levels are now displayed read-only since the game recomputes them from EXP/multipliers on load (EXP remains editable).

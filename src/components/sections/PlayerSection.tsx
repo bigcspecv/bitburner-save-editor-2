@@ -2,6 +2,7 @@ import { Card, NumberInput, Button } from '../ui';
 import { useSaveStore } from '../../store/save-store';
 import type { PlayerSkills } from '../../models/types';
 import { computeAllMultipliers } from '../../lib/multiplier-calculator';
+import { computeAllSkillLevels } from '../../lib/level-calculator';
 import { useMemo } from 'react';
 
 const STAT_FIELDS: { key: keyof PlayerSkills; label: string }[] = [
@@ -16,6 +17,7 @@ const STAT_FIELDS: { key: keyof PlayerSkills; label: string }[] = [
 
 export function PlayerSection() {
   const player = useSaveStore((state) => state.currentSave?.PlayerSave.data);
+  const originalPlayer = useSaveStore((state) => state.originalSave?.PlayerSave.data);
   const updatePlayerExp = useSaveStore((state) => state.updatePlayerExp);
   const updatePlayerResources = useSaveStore((state) => state.updatePlayerResources);
   const resetPlayer = useSaveStore((state) => state.resetPlayer);
@@ -26,6 +28,11 @@ export function PlayerSection() {
   const allMultipliers = useMemo(() => {
     if (!player) return null;
     return computeAllMultipliers(player);
+  }, [player]);
+
+  const allSkillLevels = useMemo(() => {
+    if (!player) return null;
+    return computeAllSkillLevels(player);
   }, [player]);
 
   if (!player) {
@@ -104,24 +111,56 @@ export function PlayerSection() {
               key={stat.key}
               className="border border-terminal-primary/40 bg-terminal-dim/5 p-3"
             >
-              <div className="flex items-center justify-between mb-2">
-                <h4 className="text-terminal-secondary uppercase tracking-wide text-sm">
-                  {stat.label}
-                </h4>
-                <span className="text-terminal-dim text-xs" title="Computed at load/import">
-                  Lv {player.skills[stat.key]} (computed)
-                </span>
-              </div>
-              <div className="space-y-2">
-                <NumberInput
-                  label="Experience"
-                  value={player.exp[stat.key]}
-                  onChange={(value) => updatePlayerExp(stat.key, value)}
-                  min={0}
-                  showButtons={false}
-                  step={1000}
-                />
-              </div>
+              {(() => {
+                const savedLevel = originalPlayer?.skills[stat.key] ?? player.skills[stat.key];
+                const computation = allSkillLevels?.find((s) => s.field === stat.key);
+                const computedLevel = computation?.calculated ?? savedLevel;
+                const matches = computation ? savedLevel === computedLevel : true;
+                const tag = matches
+                  ? 'MATCH'
+                  : computedLevel > savedLevel
+                    ? 'DIFF +'
+                    : 'DIFF -';
+
+                return (
+                  <>
+                    <div className="flex items-center justify-between mb-2">
+                      <h4 className="text-terminal-secondary uppercase tracking-wide text-sm">
+                        {stat.label}
+                      </h4>
+                      {allSkillLevels && (
+                        <span className="text-terminal-dim text-2xs uppercase" title="Recomputed from EXP and multipliers">
+                          {tag}
+                        </span>
+                      )}
+                    </div>
+                    <div className="space-y-2">
+                      <div className="text-terminal-primary text-sm">
+                        <p>
+                          From Original Save:{' '}
+                          <span className="text-terminal-secondary">
+                            {originalPlayer?.skills[stat.key] ?? player.skills[stat.key]}
+                          </span>
+                        </p>
+                        <p>
+                          Computed (New Save):{' '}
+                          <span className="text-terminal-secondary">
+                            {computedLevel}
+                          </span>
+                        </p>
+                      </div>
+                      <NumberInput
+                        label="Experience"
+                        value={player.exp[stat.key]}
+                        onChange={(value) => updatePlayerExp(stat.key, value)}
+                        min={0}
+                        showButtons={false}
+                        step={1000}
+                      />
+                    </div>
+                  </>
+                );
+              })()}
             </div>
           ))}
         </div>
@@ -175,6 +214,11 @@ export function PlayerSection() {
               const computedRounded = Math.round(m.calculated * 1e6) / 1e6;
               const delta = Math.abs(savedRounded - computedRounded);
               const matched = delta < 1e-5;
+              const tag = matched
+                ? 'MATCH'
+                : computedRounded > savedRounded
+                  ? 'DIFF +'
+                  : 'DIFF -';
               const displayComputed = matched ? savedRounded : computedRounded;
               return (
                 <div
@@ -185,11 +229,9 @@ export function PlayerSection() {
                     <h4 className="text-terminal-secondary uppercase tracking-wide text-sm">
                       {m.field.replace(/_/g, ' ')}
                     </h4>
-                    {matched ? (
-                      <span className="text-terminal-dim text-2xs uppercase">match</span>
-                    ) : (
-                      <span className="text-terminal-dim text-2xs uppercase">diff {delta.toFixed(8)}</span>
-                    )}
+                    <span className="text-terminal-dim text-2xs uppercase">
+                      {tag}{!matched ? ` ${delta.toFixed(8)}` : ''}
+                    </span>
                   </div>
                   <p className="text-terminal-primary text-sm">
                     From Original Save:{' '}
