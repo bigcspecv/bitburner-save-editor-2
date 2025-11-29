@@ -41,3 +41,6 @@ export type { LabelProps } from './Label';
 
 export { MultiSelect } from './MultiSelect';
 export type { MultiSelectProps, MultiSelectOption } from './MultiSelect';
+
+export { ResetAction } from './ResetAction';
+export type { ResetActionProps } from './ResetAction';

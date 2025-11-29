@@ -1,4 +1,10 @@
-import { InputHTMLAttributes, forwardRef } from 'react';
+import {
+  InputHTMLAttributes,
+  KeyboardEvent,
+  MutableRefObject,
+  forwardRef,
+  useRef,
+} from 'react';
 import clsx from 'clsx';
 
 export interface InputProps extends InputHTMLAttributes<HTMLInputElement> {
@@ -11,7 +17,28 @@ export interface InputProps extends InputHTMLAttributes<HTMLInputElement> {
  * Supports labels and error states
  */
 export const Input = forwardRef<HTMLInputElement, InputProps>(
-  ({ className, label, error, type = 'text', ...props }, ref) => {
+  ({ className, label, error, type = 'text', onKeyDown, ...props }, ref) => {
+    const inputRef = useRef<HTMLInputElement>(null);
+
+    const handleKeyDown = (e: KeyboardEvent<HTMLInputElement>) => {
+      onKeyDown?.(e);
+      if (e.defaultPrevented) return;
+      if (e.key === 'Enter') {
+        e.preventDefault();
+        inputRef.current?.blur();
+      }
+    };
+
+    const assignRef = (node: HTMLInputElement | null) => {
+      inputRef.current = node;
+      if (!ref) return;
+      if (typeof ref === 'function') {
+        ref(node);
+      } else {
+        (ref as MutableRefObject<HTMLInputElement | null>).current = node;
+      }
+    };
+
     return (
       <div className="w-full">
         {label && (
@@ -20,8 +47,9 @@ export const Input = forwardRef<HTMLInputElement, InputProps>(
           </label>
         )}
         <input
-          ref={ref}
+          ref={assignRef}
           type={type}
+          onKeyDown={handleKeyDown}
           className={clsx(
             'w-full bg-black border text-terminal-primary px-3 py-2',
             'focus:outline-none focus:ring-1 font-mono',

@@ -1,4 +1,10 @@
-import { TextareaHTMLAttributes, forwardRef } from 'react';
+import {
+  KeyboardEvent,
+  MutableRefObject,
+  TextareaHTMLAttributes,
+  forwardRef,
+  useRef,
+} from 'react';
 import clsx from 'clsx';
 
 export interface TextareaProps extends TextareaHTMLAttributes<HTMLTextAreaElement> {
@@ -10,7 +16,28 @@ export interface TextareaProps extends TextareaHTMLAttributes<HTMLTextAreaElemen
  * Terminal-styled textarea component
  */
 export const Textarea = forwardRef<HTMLTextAreaElement, TextareaProps>(
-  ({ className, label, error, ...props }, ref) => {
+  ({ className, label, error, onKeyDown, ...props }, ref) => {
+    const textareaRef = useRef<HTMLTextAreaElement>(null);
+
+    const handleKeyDown = (e: KeyboardEvent<HTMLTextAreaElement>) => {
+      onKeyDown?.(e);
+      if (e.defaultPrevented) return;
+      if (e.key === 'Enter') {
+        e.preventDefault();
+        textareaRef.current?.blur();
+      }
+    };
+
+    const assignRef = (node: HTMLTextAreaElement | null) => {
+      textareaRef.current = node;
+      if (!ref) return;
+      if (typeof ref === 'function') {
+        ref(node);
+      } else {
+        (ref as MutableRefObject<HTMLTextAreaElement | null>).current = node;
+      }
+    };
+
     return (
       <div className="w-full">
         {label && (
@@ -19,7 +46,8 @@ export const Textarea = forwardRef<HTMLTextAreaElement, TextareaProps>(
           </label>
         )}
         <textarea
-          ref={ref}
+          ref={assignRef}
+          onKeyDown={handleKeyDown}
           className={clsx(
             'w-full bg-black border text-terminal-primary px-3 py-2',
             'focus:outline-none focus:ring-1 font-mono',

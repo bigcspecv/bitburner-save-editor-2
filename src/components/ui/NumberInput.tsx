@@ -1,4 +1,11 @@
-import { InputHTMLAttributes, forwardRef, useState, useEffect } from 'react';
+import {
+  InputHTMLAttributes,
+  forwardRef,
+  useState,
+  useEffect,
+  useRef,
+} from 'react';
+import type { ChangeEvent, KeyboardEvent, MutableRefObject } from 'react';
 import clsx from 'clsx';
 import { Button } from './Button';
 
@@ -33,6 +40,7 @@ export const NumberInput = forwardRef<HTMLInputElement, NumberInputProps>(
   }, ref) => {
     // Track the raw input string to allow free typing
     const [inputValue, setInputValue] = useState(value.toString());
+    const inputRef = useRef<HTMLInputElement>(null);
 
     // Sync inputValue when value prop changes externally
     useEffect(() => {
@@ -55,13 +63,13 @@ export const NumberInput = forwardRef<HTMLInputElement, NumberInputProps>(
       setInputValue(newValue.toString());
     };
 
-    const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const handleInputChange = (e: ChangeEvent<HTMLInputElement>) => {
       // Allow free typing without immediate validation
       setInputValue(e.target.value);
     };
 
-    const handleBlur = () => {
-      // Validate and constrain on blur
+    const applyValue = () => {
+      // Validate and constrain on blur/enter
       const numValue = parseFloat(inputValue);
 
       if (isNaN(numValue) || inputValue === '') {
@@ -82,6 +90,28 @@ export const NumberInput = forwardRef<HTMLInputElement, NumberInputProps>(
       // Update the value
       onChange?.(constrainedValue);
       setInputValue(constrainedValue.toString());
+    };
+
+    const handleBlur = () => {
+      applyValue();
+    };
+
+    const handleKeyDown = (e: KeyboardEvent<HTMLInputElement>) => {
+      if (e.key === 'Enter') {
+        e.preventDefault();
+        applyValue();
+        inputRef.current?.blur();
+      }
+    };
+
+    const assignRefs = (node: HTMLInputElement | null) => {
+      inputRef.current = node;
+      if (!ref) return;
+      if (typeof ref === 'function') {
+        ref(node);
+      } else {
+        (ref as MutableRefObject<HTMLInputElement | null>).current = node;
+      }
     };
 
     return (
@@ -107,11 +137,12 @@ export const NumberInput = forwardRef<HTMLInputElement, NumberInputProps>(
           )}
 
           <input
-            ref={ref}
+            ref={assignRefs}
             type="number"
             value={inputValue}
             onChange={handleInputChange}
             onBlur={handleBlur}
+            onKeyDown={handleKeyDown}
             min={min}
             max={max}
             step={step}

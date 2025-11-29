@@ -767,6 +767,11 @@ if (!result.success) {
 
 *Track significant updates to this context document here.*
 
+- **2025-12-01** - Player section reset button renamed to "Reset Stats & Skills" and now calls `resetPlayerStats` in the store, which only restores hp/skills/exp/mults from the original save (money/resources and other player fields remain unchanged).
+- **2025-12-01** - Player section now hides the stats reset button when there are no stat/skill changes (shows "No Modifications"); uses store helper `hasPlayerStatChanges` that scopes comparison to hp/skills/exp/mults.
+- **2025-12-01** - Added reusable `ResetAction` UI component (button or "No Modifications" label) with configurable title; PlayerSection now uses it for stats and resources.
+- **2025-12-01** - Store now exposes `resetPlayerResources` and `hasPlayerResourceChanges` to scope reset/change detection to money/karma/entropy; Money/Karma/Entropy card wired to `ResetAction`.
+- **2025-12-01** - NumberInput now applies its value on Enter and blurs the field (same as blur behavior), ensuring edits commit when pressing Enter. Input and Textarea now also blur on Enter (after calling user onKeyDown handlers).
 - **2025-11-30** - Added skill level calculator (`src/lib/level-calculator.ts`) with BitNode LevelMultipliers (SF override aware) and wired Player stats UI to show original saved level vs computed level per stat alongside EXP editors.
 
 - **2025-11-29** - Added hacking multiplier calculator helper plus UI/readout (saved vs computed) and a vitest for sample save; future multipliers can extend the helper.

@@ -21,8 +21,12 @@ interface SaveStoreState {
   updatePlayerExp: (skill: keyof ParsedSaveData['PlayerSave']['data']['exp'], value: number) => void;
   updatePlayerHp: (field: keyof ParsedSaveData['PlayerSave']['data']['hp'], value: number) => void;
   updatePlayerResources: (updates: Partial<Pick<ParsedSaveData['PlayerSave']['data'], 'money' | 'karma' | 'entropy'>>) => void;
+  resetPlayerStats: () => void;
+  resetPlayerResources: () => void;
   resetPlayer: () => void;
   hasChanges: () => boolean;
+  hasPlayerStatChanges: () => boolean;
+  hasPlayerResourceChanges: () => boolean;
   clearError: () => void;
 }
 
@@ -141,6 +145,22 @@ export const useSaveStore = create<SaveStoreState>((set, get) => ({
     });
   },
 
+  resetPlayerStats() {
+    const { originalSave, currentSave } = get();
+    if (!originalSave || !currentSave) return;
+
+    const draft = cloneSave(currentSave);
+    draft.PlayerSave.data = {
+      ...draft.PlayerSave.data,
+      hp: cloneSave(originalSave.PlayerSave.data.hp),
+      skills: cloneSave(originalSave.PlayerSave.data.skills),
+      exp: cloneSave(originalSave.PlayerSave.data.exp),
+      mults: cloneSave(originalSave.PlayerSave.data.mults),
+    };
+
+    set({ currentSave: draft });
+  },
+
   resetPlayer() {
     const { originalSave, currentSave } = get();
     if (!originalSave || !currentSave) return;
@@ -148,6 +168,48 @@ export const useSaveStore = create<SaveStoreState>((set, get) => ({
     const draft = cloneSave(currentSave);
     draft.PlayerSave = cloneSave(originalSave.PlayerSave);
     set({ currentSave: draft });
+  },
+
+  resetPlayerResources() {
+    const { originalSave, currentSave } = get();
+    if (!originalSave || !currentSave) return;
+
+    const draft = cloneSave(currentSave);
+    draft.PlayerSave.data = {
+      ...draft.PlayerSave.data,
+      money: originalSave.PlayerSave.data.money,
+      karma: originalSave.PlayerSave.data.karma,
+      entropy: originalSave.PlayerSave.data.entropy,
+    };
+
+    set({ currentSave: draft });
+  },
+
+  hasPlayerStatChanges() {
+    const { originalSave, currentSave } = get();
+    if (!originalSave || !currentSave) return false;
+
+    const snapshot = (save: ParsedSaveData) => ({
+      hp: save.PlayerSave.data.hp,
+      skills: save.PlayerSave.data.skills,
+      exp: save.PlayerSave.data.exp,
+      mults: save.PlayerSave.data.mults,
+    });
+
+    return JSON.stringify(snapshot(originalSave)) !== JSON.stringify(snapshot(currentSave));
+  },
+
+  hasPlayerResourceChanges() {
+    const { originalSave, currentSave } = get();
+    if (!originalSave || !currentSave) return false;
+
+    const snapshot = (save: ParsedSaveData) => ({
+      money: save.PlayerSave.data.money,
+      karma: save.PlayerSave.data.karma,
+      entropy: save.PlayerSave.data.entropy,
+    });
+
+    return JSON.stringify(snapshot(originalSave)) !== JSON.stringify(snapshot(currentSave));
   },
 
   hasChanges() {

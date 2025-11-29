@@ -1,4 +1,4 @@
-import { Card, NumberInput, Button } from '../ui';
+import { Card, NumberInput, ResetAction } from '../ui';
 import { useSaveStore } from '../../store/save-store';
 import type { PlayerSkills } from '../../models/types';
 import { computeAllMultipliers } from '../../lib/multiplier-calculator';
@@ -20,8 +20,10 @@ export function PlayerSection() {
   const originalPlayer = useSaveStore((state) => state.originalSave?.PlayerSave.data);
   const updatePlayerExp = useSaveStore((state) => state.updatePlayerExp);
   const updatePlayerResources = useSaveStore((state) => state.updatePlayerResources);
-  const resetPlayer = useSaveStore((state) => state.resetPlayer);
-  const hasChanges = useSaveStore((state) => state.hasChanges());
+  const resetPlayerStats = useSaveStore((state) => state.resetPlayerStats);
+  const resetPlayerResources = useSaveStore((state) => state.resetPlayerResources);
+  const hasStatChanges = useSaveStore((state) => state.hasPlayerStatChanges());
+  const hasResourceChanges = useSaveStore((state) => state.hasPlayerResourceChanges());
   const status = useSaveStore((state) => state.status);
   const isLoading = status === 'loading';
 
@@ -56,14 +58,12 @@ export function PlayerSection() {
         title="Stats & Skills"
         subtitle="Levels are derived from experience and multipliers; edit experience to influence final levels"
         actions={
-          <Button
-            size="sm"
-            variant="secondary"
-            onClick={resetPlayer}
-            disabled={!hasChanges || isLoading}
-          >
-            Reset Player
-          </Button>
+          <ResetAction
+            title="Reset Stats & Skills"
+            hasChanges={hasStatChanges}
+            onReset={resetPlayerStats}
+            disabled={isLoading}
+          />
         }
       >
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
@@ -169,6 +169,14 @@ export function PlayerSection() {
       <Card
         title="Money / Karma / Entropy"
         subtitle="Core progression resources"
+        actions={
+          <ResetAction
+            title="Reset Money / Karma / Entropy"
+            hasChanges={hasResourceChanges}
+            onReset={resetPlayerResources}
+            disabled={isLoading}
+          />
+        }
       >
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           <NumberInput
