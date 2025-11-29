@@ -116,7 +116,7 @@ The editor is organized by **gameplay concepts**, not save file structure:
   - [x] Component demo page
 - [x] Save file loader (gzip/base64/JSON)
 - [ ] Save file exporter
-- [ ] State management (Zustand or Context)
+- [x] State management (Zustand or Context)
 - [ ] Player section
   - [ ] Stats & skills editor
   - [ ] Money, karma, entropy

@@ -1,6 +1,7 @@
-import { ChangeEvent, useState } from 'react';
+import { ChangeEvent } from 'react';
 import { AppLayout } from '../components/layout/AppLayout';
 import { Button, Card, FileInput } from '../components/ui';
+import { useSaveStore } from '../store/save-store';
 
 interface EditorShellProps {
   onShowDemo: () => void;
@@ -11,15 +12,21 @@ interface EditorShellProps {
  * once state management and real data loading are wired up.
  */
 export function EditorShell({ onShowDemo }: EditorShellProps) {
-  const [saveLoaded, setSaveLoaded] = useState(false);
+  const status = useSaveStore((state) => state.status);
+  const error = useSaveStore((state) => state.error);
+  const lastFileName = useSaveStore((state) => state.lastFileName);
+  const saveFormat = useSaveStore((state) => state.saveFormat);
+  const loadFromFile = useSaveStore((state) => state.loadFromFile);
+  const resetToOriginal = useSaveStore((state) => state.resetToOriginal);
+  const hasChanges = useSaveStore((state) => state.hasChanges());
+  const isLoaded = useSaveStore((state) => Boolean(state.currentSave && state.originalSave));
+  const isLoading = status === 'loading';
 
-  const handleFileChange = (event: ChangeEvent<HTMLInputElement>) => {
+  const handleFileChange = async (event: ChangeEvent<HTMLInputElement>) => {
     const selectedFile = event.target.files?.[0];
     if (!selectedFile) return;
 
-    // TODO: Wire this up to real save loading logic
-    console.log('File selected:', selectedFile);
-    setSaveLoaded(true);
+    await loadFromFile(selectedFile);
   };
 
   return (
@@ -36,7 +43,7 @@ export function EditorShell({ onShowDemo }: EditorShellProps) {
         </Button>
       }
     >
-      {!saveLoaded ? (
+      {!isLoaded ? (
         <Card title="Upload Save File" className="max-w-2xl mx-auto">
           <p className="mb-4 text-terminal-dim">
             Select your Bitburner save file (.json or .json.gz)
@@ -45,11 +52,54 @@ export function EditorShell({ onShowDemo }: EditorShellProps) {
             accept=".json,.gz"
             buttonText="Select Save File"
             onChange={handleFileChange}
+            disabled={isLoading}
           />
+          {isLoading && (
+            <p className="text-terminal-secondary mt-3 text-sm">&gt; Loading save data...</p>
+          )}
+          {status === 'error' && error && (
+            <p className="text-red-500 mt-3 text-sm font-mono">&gt; {error}</p>
+          )}
         </Card>
       ) : (
         <Card title="Save Loaded">
-          <p className="text-terminal-dim">Editor sections will go here...</p>
+          <p className="text-terminal-dim mb-4">
+            Loaded{' '}
+            <span className="text-terminal-secondary">
+              {lastFileName ?? 'save file'}
+            </span>
+            {saveFormat ? ` (${saveFormat})` : ''}. Original snapshot is preserved for full reverts.
+          </p>
+
+          <div className="flex flex-wrap items-center gap-3 mb-3">
+            <Button
+              variant="secondary"
+              onClick={resetToOriginal}
+              disabled={!hasChanges || isLoading}
+            >
+              Revert to Original
+            </Button>
+            <FileInput
+              accept=".json,.gz"
+              buttonText="Load Different File"
+              onChange={handleFileChange}
+              showFilename={false}
+              disabled={isLoading}
+            />
+          </div>
+
+          <p className="text-terminal-dim text-sm">
+            {hasChanges ? (
+              <span className="text-terminal-secondary">
+                Changes detected in the editable copy. Use "Revert to Original" to discard them.
+              </span>
+            ) : (
+              'Current data matches the original save.'
+            )}
+          </p>
+          {status === 'error' && error && (
+            <p className="text-red-500 mt-3 text-sm font-mono">&gt; {error}</p>
+          )}
         </Card>
       )}
     </AppLayout>

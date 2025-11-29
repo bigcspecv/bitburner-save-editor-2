@@ -305,6 +305,14 @@ export const useSaveStore = create<SaveStore>((set, get) => ({
 }));
 ```
 
+### Current Save Store (implemented)
+
+- Located at `src/store/save-store.ts` using Zustand.
+- Keeps `originalSave` as a deep-frozen clone of the parsed save to prevent accidental mutation; `currentSave` is a separate editable clone.
+- `loadFromFile` parses via `loadAndParseSaveFile`, records `saveFormat`/`lastFileName`, and sets status flags (`idle` | `loading` | `ready` | `error`).
+- `resetToOriginal` replaces `currentSave` with a fresh clone of `originalSave`; `mutateCurrentSave` clones before applying a mutator; `replaceCurrentSave` swaps the editable copy wholesale.
+- `hasChanges` compares `originalSave` and `currentSave` via `JSON.stringify`; preserve ordering/structure to avoid false positives.
+
 ### React Context Alternative
 
 If you prefer Context API:
@@ -753,6 +761,7 @@ if (!result.success) {
 
 *Track significant updates to this context document here.*
 
+- **2025-11-29** - Added Zustand save store implementation details (immutable original vs editable current, load/reset helpers) and EditorShell wiring for load/revert UX.
 - **2025-11-29** - Documented App/Layout refactor: App now toggles EditorShell vs ComponentDemo via query params; shared chrome extracted to `AppLayout.tsx`.
 - **2025-11-28** - Initial document creation for V2 rewrite
 

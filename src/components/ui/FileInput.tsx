@@ -48,6 +48,7 @@ export function FileInput({
           type="button"
           onClick={() => inputRef.current?.click()}
           variant="primary"
+          disabled={props.disabled}
         >
           {buttonText}
         </Button>
