@@ -84,45 +84,51 @@ Bitburner save files can be in three formats:
 
 ```
 src/
-├── components/
-│   ├── ui/              # Reusable terminal-styled components
-│   │   ├── Button.tsx
-│   │   ├── Input.tsx
-│   │   ├── Table.tsx
-│   │   ├── Card.tsx
-│   │   └── ...
-│   ├── layout/          # Layout components
-│   │   ├── Header.tsx
-│   │   ├── Navigation.tsx
-│   │   └── Container.tsx
-│   └── sections/        # Game-centric editor sections
-│       ├── PlayerSection.tsx
-│       ├── ServersSection.tsx
-│       ├── CompaniesSection.tsx
-│       ├── FactionsSection.tsx
-│       ├── GangsSection.tsx
-│       └── ...
-├── models/
-│   ├── schemas/         # Zod schemas for runtime validation
-│   │   ├── player.ts
-│   │   ├── servers.ts
-│   │   ├── companies.ts
-│   │   └── ...
-│   ├── types.ts         # TypeScript types (inferred from Zod)
-│   └── constants.ts     # Game data (companies, jobs, augs, etc.)
-├── lib/
-│   ├── save-loader.ts   # Load/parse save files
-│   ├── save-exporter.ts # Export/compress save files
-│   └── utils.ts         # Utility functions
-├── store/
-│   └── save-store.ts    # Global state management
-├── App.tsx
-├── main.tsx
-└── index.css
+  components/
+    ui/              # Reusable terminal-styled components
+      Button.tsx
+      Input.tsx
+      Table.tsx
+      Card.tsx
+      ...
+    layout/          # Layout components
+      AppLayout.tsx
+    sections/        # Game-centric editor sections
+      PlayerSection.tsx
+      ServersSection.tsx
+      CompaniesSection.tsx
+      FactionsSection.tsx
+      GangsSection.tsx
+      ...
+  models/
+    schemas/         # Zod schemas for runtime validation
+      player.ts
+      servers.ts
+      companies.ts
+      ...
+    types.ts         # TypeScript types (inferred from Zod)
+    constants.ts     # Game data (companies, jobs, augs, etc.)
+  lib/
+    save-loader.ts   # Load/parse save files
+    save-exporter.ts # Export/compress save files
+    utils.ts         # Utility functions
+  store/
+    save-store.ts    # Global state management
+  pages/
+    ComponentDemo.tsx # UI component showcase
+    EditorShell.tsx   # Editor landing/placeholder
+  App.tsx                # Top-level shell (routes editor vs demo)
+  main.tsx
+  index.css
 ```
 
----
+### App Shell / Demo Toggle
+- `App.tsx` now only switches between `EditorShell` (normal app) and `ComponentDemo` (UI showcase) based on query params (`?demo` or `?ui-demo`) or user actions.
+- Shared header/footer/background live in `components/layout/AppLayout.tsx` so both pages stay consistent.
+- `ComponentDemo` accepts an `onExit` callback; default fallback is navigating back to the current path.
+- `EditorShell` currently holds the upload card placeholder; save loading logic should hook into it later.
 
+---
 ## UI Architecture: Game-Centric Sections
 
 The UI is organized by **gameplay concepts**, not save file structure:
@@ -747,4 +753,6 @@ if (!result.success) {
 
 *Track significant updates to this context document here.*
 
+- **2025-11-29** - Documented App/Layout refactor: App now toggles EditorShell vs ComponentDemo via query params; shared chrome extracted to `AppLayout.tsx`.
 - **2025-11-28** - Initial document creation for V2 rewrite
+
