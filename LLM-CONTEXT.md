@@ -689,6 +689,8 @@ Run tests: `npm run test`
 - **Faction discovery values**: Real saves use `"known"`, `"unknown"`, and `"rumored"` (not `"rumor"`); normalize `"rumor"` to `"rumored"` if encountered.
 - **VersionSave type**: The stringified value parses to a JSON number (e.g., `"43"` -> `43`); accept numeric or string inputs but coerce to a number during parsing.
 - **Player multipliers**: These are derived (augs/bitnode/source files/entropy) and should remain read-only; if displayed before recalculation wiring exists, label as informational/not recalculated yet.
+- **Multiplier calculator**: `src/lib/multiplier-calculator.ts` recomputes all player multipliers from Source-File 1/2/5 (see field coverage), BitNode HackingLevelMultiplier (where applicable), exploit bonuses (1.001^exploits on eligible fields), and augs we currently map (NFG across all, BitWire, Neurotrainer I exp bonuses, Synaptic Enhancement Implant hacking_speed) plus donation bonus. Player section shows saved vs computed multipliers with rounding/tolerance; vitest in `src/lib/multiplier-calculator.test.ts`.
+- **Player skill levels**: All skill levels (hacking/combat/cha) are recomputed from EXP and multipliers on load; editing level values in the save has no lasting effect. UI should treat levels as read-only and surface EXP editing instead.
 
 ---
 
@@ -765,6 +767,8 @@ if (!result.success) {
 
 *Track significant updates to this context document here.*
 
+- **2025-11-29** - Added hacking multiplier calculator helper plus UI/readout (saved vs computed) and a vitest for sample save; future multipliers can extend the helper.
+- **2025-11-29** - Player stat level inputs removed; levels are now displayed read-only since the game recomputes them from EXP/multipliers on load (EXP remains editable).
 - **2025-11-29** - Player section now includes stats/exp editor plus money/karma/entropy controls; added save-store helpers (`updatePlayerSkill/Exp/Hp/Resources`, `resetPlayer` clones original PlayerSave).
 - **2025-11-29** - HP editing now auto-raises max HP when current HP is set above it (`updatePlayerHp` logic in save store) to keep values consistent.
 - **2025-11-29** - Player HP now displayed read-only in the UI with note (Bitburner recomputes HP from stats on load); editing removed from Player section.

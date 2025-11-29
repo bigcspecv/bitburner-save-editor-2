@@ -18,7 +18,6 @@ interface SaveStoreState {
   resetToOriginal: () => void;
   replaceCurrentSave: (nextSave: ParsedSaveData) => void;
   mutateCurrentSave: (mutator: (draft: ParsedSaveData) => void) => void;
-  updatePlayerSkill: (skill: keyof ParsedSaveData['PlayerSave']['data']['skills'], value: number) => void;
   updatePlayerExp: (skill: keyof ParsedSaveData['PlayerSave']['data']['exp'], value: number) => void;
   updatePlayerHp: (field: keyof ParsedSaveData['PlayerSave']['data']['hp'], value: number) => void;
   updatePlayerResources: (updates: Partial<Pick<ParsedSaveData['PlayerSave']['data'], 'money' | 'karma' | 'entropy'>>) => void;
@@ -112,12 +111,6 @@ export const useSaveStore = create<SaveStoreState>((set, get) => ({
     const draft = cloneSave(currentSave);
     mutator(draft);
     set({ currentSave: draft });
-  },
-
-  updatePlayerSkill(skill, value) {
-    get().mutateCurrentSave((draft) => {
-      draft.PlayerSave.data.skills[skill] = value;
-    });
   },
 
   updatePlayerExp(skill, value) {

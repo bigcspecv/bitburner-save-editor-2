@@ -1,6 +1,8 @@
 import { Card, NumberInput, Button } from '../ui';
 import { useSaveStore } from '../../store/save-store';
 import type { PlayerSkills } from '../../models/types';
+import { computeAllMultipliers } from '../../lib/multiplier-calculator';
+import { useMemo } from 'react';
 
 const STAT_FIELDS: { key: keyof PlayerSkills; label: string }[] = [
   { key: 'hacking', label: 'Hacking' },
@@ -14,13 +16,17 @@ const STAT_FIELDS: { key: keyof PlayerSkills; label: string }[] = [
 
 export function PlayerSection() {
   const player = useSaveStore((state) => state.currentSave?.PlayerSave.data);
-  const updatePlayerSkill = useSaveStore((state) => state.updatePlayerSkill);
   const updatePlayerExp = useSaveStore((state) => state.updatePlayerExp);
   const updatePlayerResources = useSaveStore((state) => state.updatePlayerResources);
   const resetPlayer = useSaveStore((state) => state.resetPlayer);
   const hasChanges = useSaveStore((state) => state.hasChanges());
   const status = useSaveStore((state) => state.status);
   const isLoading = status === 'loading';
+
+  const allMultipliers = useMemo(() => {
+    if (!player) return null;
+    return computeAllMultipliers(player);
+  }, [player]);
 
   if (!player) {
     return (
@@ -41,7 +47,7 @@ export function PlayerSection() {
     <div className="space-y-4">
       <Card
         title="Stats & Skills"
-        subtitle="Adjust core stats and their experience values"
+        subtitle="Levels are derived from experience and multipliers; edit experience to influence final levels"
         actions={
           <Button
             size="sm"
@@ -89,6 +95,7 @@ export function PlayerSection() {
               Identity and BitNode are shown for context; gameplay multipliers are read-only for now.
             </p>
           </div>
+
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
@@ -101,17 +108,11 @@ export function PlayerSection() {
                 <h4 className="text-terminal-secondary uppercase tracking-wide text-sm">
                   {stat.label}
                 </h4>
-                <span className="text-terminal-dim text-xs">
-                  Lv {player.skills[stat.key]}
+                <span className="text-terminal-dim text-xs" title="Computed at load/import">
+                  Lv {player.skills[stat.key]} (computed)
                 </span>
               </div>
               <div className="space-y-2">
-                <NumberInput
-                  label="Level"
-                  value={player.skills[stat.key]}
-                  onChange={(value) => updatePlayerSkill(stat.key, value)}
-                  min={0}
-                />
                 <NumberInput
                   label="Experience"
                   value={player.exp[stat.key]}
@@ -159,6 +160,51 @@ export function PlayerSection() {
           are informational for now and will be surfaced separately.
         </p>
       </Card>
+
+      {allMultipliers && (
+        <Card
+          title="Multipliers"
+          subtitle="Computed value uses Source-File and augmentation effects; see console debug log for factors."
+        >
+          <p className="text-terminal-secondary text-xs mb-3">
+            Matching values are rounded to 6 decimals; tiny floating-point differences are treated as matches.
+          </p>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
+            {allMultipliers.map((m) => {
+              const savedRounded = Math.round(m.saved * 1e6) / 1e6;
+              const computedRounded = Math.round(m.calculated * 1e6) / 1e6;
+              const delta = Math.abs(savedRounded - computedRounded);
+              const matched = delta < 1e-5;
+              const displayComputed = matched ? savedRounded : computedRounded;
+              return (
+                <div
+                  key={m.field}
+                  className="border border-terminal-primary/40 bg-terminal-dim/5 p-3"
+                >
+                  <div className="flex items-center justify-between mb-1">
+                    <h4 className="text-terminal-secondary uppercase tracking-wide text-sm">
+                      {m.field.replace(/_/g, ' ')}
+                    </h4>
+                    {matched ? (
+                      <span className="text-terminal-dim text-2xs uppercase">match</span>
+                    ) : (
+                      <span className="text-terminal-dim text-2xs uppercase">diff {delta.toFixed(8)}</span>
+                    )}
+                  </div>
+                  <p className="text-terminal-primary text-sm">
+                    From Original Save:{' '}
+                    <span className="text-terminal-secondary">{savedRounded.toFixed(6)}</span>
+                  </p>
+                  <p className="text-terminal-primary text-sm">
+                    Computed (New Save):{' '}
+                    <span className="text-terminal-secondary">{displayComputed.toFixed(6)}</span>
+                  </p>
+                </div>
+              );
+            })}
+          </div>
+        </Card>
+      )}
     </div>
   );
 }
