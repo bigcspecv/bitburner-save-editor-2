@@ -25,6 +25,7 @@ interface SaveStoreState {
   removeAugmentation: (name: string, queued: boolean) => void;
   updateAugmentationLevel: (name: string, level: number, queued: boolean) => void;
   resetAugmentations: () => void;
+  resetOtherAugmentations: () => void;
   resetPlayerStats: () => void;
   resetPlayerResources: () => void;
   resetPlayer: () => void;
@@ -32,6 +33,7 @@ interface SaveStoreState {
   hasPlayerStatChanges: () => boolean;
   hasPlayerResourceChanges: () => boolean;
   hasAugmentationChanges: () => boolean;
+  hasOtherAugmentationChanges: () => boolean;
   clearError: () => void;
 }
 
@@ -202,6 +204,25 @@ export const useSaveStore = create<SaveStoreState>((set, get) => ({
     set({ currentSave: draft });
   },
 
+  resetOtherAugmentations() {
+    const { originalSave, currentSave } = get();
+    if (!originalSave || !currentSave) return;
+
+    const draft = cloneSave(currentSave);
+
+    // Keep current NeuroFlux, restore everything else from original
+    const currentNeuroInstalled = draft.PlayerSave.data.augmentations.filter(a => a.name === 'NeuroFlux Governor');
+    const currentNeuroQueued = draft.PlayerSave.data.queuedAugmentations.filter(a => a.name === 'NeuroFlux Governor');
+
+    const originalNonNeuroInstalled = originalSave.PlayerSave.data.augmentations.filter(a => a.name !== 'NeuroFlux Governor');
+    const originalNonNeuroQueued = originalSave.PlayerSave.data.queuedAugmentations.filter(a => a.name !== 'NeuroFlux Governor');
+
+    draft.PlayerSave.data.augmentations = [...structuredClone(originalNonNeuroInstalled), ...currentNeuroInstalled];
+    draft.PlayerSave.data.queuedAugmentations = [...structuredClone(originalNonNeuroQueued), ...currentNeuroQueued];
+
+    set({ currentSave: draft });
+  },
+
   hasAugmentationChanges() {
     const { originalSave, currentSave } = get();
     if (!originalSave || !currentSave) return false;
@@ -209,6 +230,18 @@ export const useSaveStore = create<SaveStoreState>((set, get) => ({
     const snapshot = (save: ParsedSaveData) => ({
       augmentations: save.PlayerSave.data.augmentations,
       queuedAugmentations: save.PlayerSave.data.queuedAugmentations,
+    });
+
+    return JSON.stringify(snapshot(originalSave)) !== JSON.stringify(snapshot(currentSave));
+  },
+
+  hasOtherAugmentationChanges() {
+    const { originalSave, currentSave } = get();
+    if (!originalSave || !currentSave) return false;
+
+    const snapshot = (save: ParsedSaveData) => ({
+      augmentations: save.PlayerSave.data.augmentations.filter(a => a.name !== 'NeuroFlux Governor'),
+      queuedAugmentations: save.PlayerSave.data.queuedAugmentations.filter(a => a.name !== 'NeuroFlux Governor'),
     });
 
     return JSON.stringify(snapshot(originalSave)) !== JSON.stringify(snapshot(currentSave));

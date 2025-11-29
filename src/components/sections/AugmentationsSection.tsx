@@ -1,4 +1,4 @@
-import { useState, useMemo, useCallback } from 'react';
+import { useState, useMemo, useCallback, useEffect } from 'react';
 import { Card, Button, Input, NumberInput, ResetAction, Select, type SelectOption } from '../ui';
 import { useSaveStore } from '../../store/save-store';
 import type { Augmentation } from '../../models/schemas/player';
@@ -87,6 +87,12 @@ function NeuroFluxEditor({
 }: NeuroFluxEditorProps) {
   const [localInstalled, setLocalInstalled] = useState(installedLevel);
   const [localQueued, setLocalQueued] = useState(queuedLevel);
+
+  // Sync local state when props change (e.g., from external reset)
+  useEffect(() => {
+    setLocalInstalled(installedLevel);
+    setLocalQueued(queuedLevel);
+  }, [installedLevel, queuedLevel]);
 
   const hasChanged =
     installedLevel !== originalInstalledLevel ||
@@ -202,7 +208,9 @@ export function AugmentationsSection() {
   const originalPlayer = useSaveStore((state) => state.originalSave?.PlayerSave.data);
   const mutateCurrentSave = useSaveStore((state) => state.mutateCurrentSave);
   const resetAugmentations = useSaveStore((state) => state.resetAugmentations);
+  const resetOtherAugmentations = useSaveStore((state) => state.resetOtherAugmentations);
   const hasChanges = useSaveStore((state) => state.hasAugmentationChanges());
+  const hasOtherAugmentationChanges = useSaveStore((state) => state.hasOtherAugmentationChanges());
   const status = useSaveStore((state) => state.status);
   const isLoading = status === 'loading';
 
@@ -406,6 +414,14 @@ export function AugmentationsSection() {
       <Card
         title="Other Augmentations"
         subtitle={`${allAugmentations.length} augmentation${allAugmentations.length !== 1 ? 's' : ''} available`}
+        actions={
+          <ResetAction
+            title="Reset Other Augmentations"
+            hasChanges={hasOtherAugmentationChanges}
+            onReset={resetOtherAugmentations}
+            disabled={isLoading}
+          />
+        }
       >
         <div className="mb-4">
           <Input
