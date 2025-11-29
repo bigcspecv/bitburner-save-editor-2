@@ -6,6 +6,17 @@ import { computeAllSkillLevels } from '../../lib/level-calculator';
 import { computeHealthStats } from '../../lib/hp-calculator';
 import { useMemo } from 'react';
 
+function formatDuration(ms?: number) {
+  if (ms === undefined || ms === null) return '—';
+  const totalSeconds = Math.max(0, Math.floor(ms / 1000));
+  const days = Math.floor(totalSeconds / 86400);
+  const hours = Math.floor((totalSeconds % 86400) / 3600);
+  const minutes = Math.floor((totalSeconds % 3600) / 60);
+  if (days > 0) return `${days}d ${hours}h`;
+  if (hours > 0) return `${hours}h ${minutes}m`;
+  return `${minutes}m`;
+}
+
 const STAT_FIELDS: { key: keyof PlayerSkills; label: string }[] = [
   { key: 'hacking', label: 'Hacking' },
   { key: 'strength', label: 'Strength' },
@@ -83,6 +94,126 @@ export function PlayerSection() {
 
   return (
     <div className="space-y-4">
+      <Card
+        title="Identity"
+        subtitle="Run context (read-only)"
+      >
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
+          <div className="border border-terminal-primary/50 bg-terminal-dim/10 p-3">
+            <div className="flex items-center justify-between mb-2">
+              <h4 className="text-terminal-secondary uppercase tracking-wide text-sm">
+                Run
+              </h4>
+            </div>
+            <p className="text-terminal-primary text-sm">
+              BitNode: <span className="text-terminal-secondary">{player.bitNodeN}</span>
+            </p>
+            <p className="text-terminal-primary text-sm">
+              Identifier: <span className="text-terminal-secondary">{player.identifier}</span>
+            </p>
+            <p className="text-terminal-dim text-xs mt-2">
+              Source File overrides: {
+                Array.isArray(player.bitNodeOptions?.sourceFileOverrides?.data)
+                  ? player.bitNodeOptions.sourceFileOverrides.data.length
+                  : 0
+              }
+            </p>
+            <p className="text-terminal-dim text-xs">
+              Market access: WSE {player.hasWseAccount ? 'Yes' : 'No'} · TIX {player.hasTixApiAccess ? 'Yes' : 'No'} · 4S {player.has4SData ? 'Yes' : 'No'} · 4S TIX {player.has4SDataTixApi ? 'Yes' : 'No'}
+            </p>
+          </div>
+
+          <div className="border border-terminal-primary/50 bg-terminal-dim/10 p-3">
+            <div className="flex items-center justify-between mb-2">
+              <h4 className="text-terminal-secondary uppercase tracking-wide text-sm">
+                Location
+              </h4>
+            </div>
+            <p className="text-terminal-primary text-sm">
+              City: <span className="text-terminal-secondary">{player.city}</span>
+            </p>
+            <p className="text-terminal-primary text-sm">
+              Area: <span className="text-terminal-secondary">{player.location}</span>
+            </p>
+            <p className="text-terminal-primary text-sm">
+              Current Server: <span className="text-terminal-secondary">{player.currentServer}</span>
+            </p>
+          </div>
+
+          <div className="border border-terminal-primary/50 bg-terminal-dim/10 p-3">
+            <div className="flex items-center justify-between mb-2">
+              <h4 className="text-terminal-secondary uppercase tracking-wide text-sm">
+                Jobs & Work
+              </h4>
+            </div>
+            {(() => {
+              const jobEntries = Object.entries(player.jobs ?? {});
+              const preview = jobEntries.slice(0, 3);
+              const extra = jobEntries.length - preview.length;
+              const currentWork =
+                player.currentWork && typeof player.currentWork === 'object' && 'data' in player.currentWork
+                  ? (player.currentWork as { data?: { type?: string; companyName?: string } }).data
+                  : null;
+              return (
+                <div className="space-y-2 text-terminal-primary text-sm">
+                  <div>
+                    <p className="text-terminal-secondary text-xs uppercase tracking-wide mb-1">
+                      Active Jobs ({jobEntries.length || 0})
+                    </p>
+                    {jobEntries.length === 0 ? (
+                      <p className="text-terminal-dim text-xs">None</p>
+                    ) : (
+                      <>
+                        {preview.map(([company, title]) => (
+                          <p key={company}>
+                            <span className="text-terminal-secondary">{company}</span>: {title}
+                          </p>
+                        ))}
+                        {extra > 0 && (
+                          <p className="text-terminal-dim text-xs">+{extra} more</p>
+                        )}
+                      </>
+                    )}
+                  </div>
+                  <div>
+                    <p className="text-terminal-secondary text-xs uppercase tracking-wide mb-1">
+                      Current Work
+                    </p>
+                    {currentWork ? (
+                      <p>
+                        {currentWork.type ?? 'Work'}{currentWork.companyName ? ` @ ${currentWork.companyName}` : ''}
+                      </p>
+                    ) : (
+                      <p className="text-terminal-dim text-xs">Not working</p>
+                    )}
+                    <p className="text-terminal-dim text-xs mt-1">
+                      Focus: {player.focus ? 'Yes' : 'No'}
+                    </p>
+                  </div>
+                </div>
+              );
+            })()}
+          </div>
+
+          <div className="border border-terminal-primary/50 bg-terminal-dim/10 p-3">
+            <div className="flex items-center justify-between mb-2">
+              <h4 className="text-terminal-secondary uppercase tracking-wide text-sm">
+                Playtime
+              </h4>
+            </div>
+            <p className="text-terminal-primary text-sm">
+              Since last Aug: <span className="text-terminal-secondary">{formatDuration(player.playtimeSinceLastAug)}</span>
+            </p>
+            <p className="text-terminal-primary text-sm">
+              Since last BitNode: <span className="text-terminal-secondary">{formatDuration(player.playtimeSinceLastBitnode)}</span>
+            </p>
+            <p className="text-terminal-primary text-sm">
+              Total: <span className="text-terminal-secondary">{formatDuration(player.totalPlaytime)}</span>
+            </p>
+          </div>
+        </div>
+      </Card>
+
       <Card
         title="Stats & Skills"
         subtitle="Levels are derived from experience and multipliers; edit experience to influence final levels"
