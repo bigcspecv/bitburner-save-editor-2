@@ -1,4 +1,5 @@
 import type { ParsedSaveData } from '../models/types';
+import { computeAllMultipliers } from './multiplier-calculator';
 
 type PlayerData = ParsedSaveData['PlayerSave']['data'];
 
@@ -127,6 +128,10 @@ export function computeAllSkillLevels(player: PlayerData): SkillLevelComputation
   const activeBitNodeLevel = getActiveSourceFileLevel(player, player.bitNodeN);
   const bitNodeLevelMultipliers = buildBitNodeLevelMultipliers(player.bitNodeN, activeBitNodeLevel);
 
+  // Compute multipliers from augmentations, source files, etc.
+  const computedMults = computeAllMultipliers(player);
+  const computedMultsMap = Object.fromEntries(computedMults.map((m) => [m.field, m]));
+
   return SKILL_FIELDS.map((field) => {
     const saved = player.skills[field];
     const exp = clampNumber(player.exp[field], 0);
@@ -137,17 +142,21 @@ export function computeAllSkillLevels(player: PlayerData): SkillLevelComputation
     }
 
     const bitNodeMult = bitNodeLevelMultipliers[field];
-    const playerMult = player.mults[field];
+    // Use computed multiplier (from augs/source files) instead of saved mults
+    const computedMultData = computedMultsMap[field];
+    const playerMult = computedMultData?.calculated ?? player.mults[field];
     const combinedMult = playerMult * bitNodeMult;
 
     const calculated = calculateSkill(exp, combinedMult);
-    const breakdown =
-      combinedMult === 1
-        ? []
-        : [
-            { label: 'Player multiplier', factor: playerMult },
-            ...(bitNodeMult !== 1 ? [{ label: `BitNode ${player.bitNodeN} level mult`, factor: bitNodeMult }] : []),
-          ];
+
+    // Build breakdown from computed multiplier sources
+    const breakdown: { label: string; factor: number }[] = [];
+    if (computedMultData?.breakdown.length) {
+      breakdown.push(...computedMultData.breakdown);
+    }
+    if (bitNodeMult !== 1) {
+      breakdown.push({ label: `BitNode ${player.bitNodeN} level mult`, factor: bitNodeMult });
+    }
 
     return {
       field,
