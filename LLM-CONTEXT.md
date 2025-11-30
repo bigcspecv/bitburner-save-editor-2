@@ -4,19 +4,21 @@
 
 **This document serves as persistent memory across chat sessions. Follow these guidelines:**
 
-1. **Maintain this document**: When you discover important architectural decisions, patterns, gotchas, or implementation details during your work, add them to the appropriate section of this document. This ensures future AI agents have the context they need.
+1. **Commit messages**: When the user asks for a "commit message", provide a simple, short, single-line commit message for the currently staged changes. Check `git diff --staged` first - if nothing is staged, prompt the user to stage their work before requesting a commit message. Do NOT create the commit yourself unless explicitly asked.
 
-2. **Update the README checklist**: The `README.md` file contains a TODO checklist that tracks project progress. You MUST:
+2. **Maintain this document**: When you discover important architectural decisions, patterns, gotchas, or implementation details during your work, add them to the appropriate section of this document. This ensures future AI agents have the context they need.
+
+3. **Update the README checklist**: The `README.md` file contains a TODO checklist that tracks project progress. You MUST:
    - Mark items as complete `[x]` when you finish implementing them
    - Add new checklist items when you identify additional work needed
    - Keep sub-items organized under their parent features
    - Maintain the existing format and structure
 
-3. **Document patterns**: If you establish a new pattern or convention while working on a feature, document it here so future implementations remain consistent.
+4. **Document patterns**: If you establish a new pattern or convention while working on a feature, document it here so future implementations remain consistent.
 
-4. **Note breaking changes**: If you discover version-specific behavior or compatibility issues, document them in the "Important Notes" section.
+5. **Note breaking changes**: If you discover version-specific behavior or compatibility issues, document them in the "Important Notes" section.
 
-5. **This file is for LLMs**: Write for other AI agents, not humans. Be concise but comprehensive. Focus on what an LLM needs to work effectively on this codebase.
+6. **This file is for LLMs**: Write for other AI agents, not humans. Be concise but comprehensive. Focus on what an LLM needs to work effectively on this codebase.
 
 ---
 

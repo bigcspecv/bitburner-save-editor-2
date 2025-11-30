@@ -115,7 +115,6 @@ function HomeServerCard({ server, onUpdate, hasChanges, onReset }: HomeServerCar
               min={1}
               max={8}
               step={1}
-              showButtons={false}
             />
             {data.cpuCores > 8 && (
               <p className="text-yellow-500 text-xs -mt-2">
@@ -217,7 +216,6 @@ function PurchasedServerCard({ server, isModified, onUpdate, onReset, onRemove }
             min={1}
             max={8}
             step={1}
-            showButtons={false}
           />
           <p className="text-terminal-dim text-xs -mt-2">
             Cores increase the effectiveness of grow() and weaken() operations.
@@ -337,6 +335,17 @@ function NetworkServerCard({ server, isModified, onUpdate, onReset }: NetworkSer
               Warning: Current RAM ({data.maxRam} GB) is not a power of 2. This may cause issues.
             </p>
           )}
+          <NumberInput
+            label="CPU Cores"
+            value={data.cpuCores}
+            onChange={handleUpdate('cpuCores')}
+            min={1}
+            max={15}
+            step={1}
+          />
+          <p className="text-terminal-dim text-xs -mt-2">
+            Cores increase the effectiveness of grow() and weaken() operations.
+          </p>
 
           {data.moneyAvailable !== undefined && (
             <>
