@@ -21,6 +21,14 @@ interface SaveStoreState {
   updatePlayerExp: (skill: keyof ParsedSaveData['PlayerSave']['data']['exp'], value: number) => void;
   updatePlayerHp: (field: keyof ParsedSaveData['PlayerSave']['data']['hp'], value: number) => void;
   updatePlayerResources: (updates: Partial<Pick<ParsedSaveData['PlayerSave']['data'], 'money' | 'karma' | 'entropy'>>) => void;
+  updateFactionStats: (
+    name: string,
+    updates: Partial<Pick<ParsedSaveData['FactionsSave'][string], 'playerReputation' | 'favor' | 'discovery' | 'isBanned'>>
+  ) => void;
+  setFactionMembership: (name: string, isMember: boolean) => void;
+  setFactionInvitation: (name: string, invited: boolean) => void;
+  resetFaction: (name: string) => void;
+  resetFactions: () => void;
   addAugmentation: (name: string, level: number, queued: boolean) => void;
   removeAugmentation: (name: string, queued: boolean) => void;
   updateAugmentationLevel: (name: string, level: number, queued: boolean) => void;
@@ -34,6 +42,7 @@ interface SaveStoreState {
   hasPlayerResourceChanges: () => boolean;
   hasAugmentationChanges: () => boolean;
   hasOtherAugmentationChanges: () => boolean;
+  hasFactionChanges: () => boolean;
   clearError: () => void;
 }
 
@@ -54,7 +63,17 @@ function deepFreeze<T>(value: T): T {
   return value;
 }
 
-const cloneSave = (data: ParsedSaveData): ParsedSaveData => structuredClone(data);
+const cloneSave = <T>(data: T): T => structuredClone(data);
+
+const insertAtIndex = (list: string[], value: string, index: number) => {
+  const next = [...list];
+  if (index >= 0 && index <= next.length) {
+    next.splice(index, 0, value);
+  } else {
+    next.push(value);
+  }
+  return next;
+};
 
 async function determineFormat(file: File): Promise<SaveFormat> {
   if (file.name.endsWith('.gz')) {
@@ -152,6 +171,117 @@ export const useSaveStore = create<SaveStoreState>((set, get) => ({
     });
   },
 
+  updateFactionStats(name, updates) {
+    get().mutateCurrentSave((draft) => {
+      const existing = draft.FactionsSave[name] ?? { discovery: 'known' };
+      draft.FactionsSave[name] = { ...existing, ...updates };
+    });
+  },
+
+  setFactionMembership(name, isMember) {
+    const originalMembers = get().originalSave?.PlayerSave.data.factions ?? [];
+    get().mutateCurrentSave((draft) => {
+      const currentMembers = draft.PlayerSave.data.factions || [];
+      const isAlreadyMember = currentMembers.includes(name);
+
+      let nextMembers = currentMembers.filter((f) => f !== name);
+      if (isMember && !isAlreadyMember) {
+        const originalIndex = originalMembers.indexOf(name);
+        nextMembers = insertAtIndex(nextMembers, name, originalIndex);
+      } else if (isAlreadyMember && !isMember) {
+        // already removed by filter
+      } else if (isAlreadyMember && isMember) {
+        nextMembers = currentMembers;
+      }
+
+      draft.PlayerSave.data.factions = nextMembers;
+
+      // Joining clears any pending invitation for the faction
+      const currentInvites = draft.PlayerSave.data.factionInvitations || [];
+      draft.PlayerSave.data.factionInvitations = isMember
+        ? currentInvites.filter((f) => f !== name)
+        : currentInvites;
+
+      const faction = draft.FactionsSave[name] ?? { discovery: 'known' };
+      faction.isMember = isMember;
+      if (isMember) {
+        faction.alreadyInvited = false;
+      }
+      draft.FactionsSave[name] = faction;
+    });
+  },
+
+  setFactionInvitation(name, invited) {
+    const originalInvites = get().originalSave?.PlayerSave.data.factionInvitations ?? [];
+    get().mutateCurrentSave((draft) => {
+      const currentInvites = draft.PlayerSave.data.factionInvitations || [];
+      const isInvited = currentInvites.includes(name);
+      const isMember = draft.PlayerSave.data.factions.includes(name);
+
+      const shouldInvite = invited && !isMember;
+      let nextInvites = currentInvites.filter((f) => f !== name);
+
+      if (shouldInvite && !isInvited) {
+        const originalIndex = originalInvites.indexOf(name);
+        nextInvites = insertAtIndex(nextInvites, name, originalIndex);
+      } else if (shouldInvite && isInvited) {
+        nextInvites = currentInvites;
+      }
+
+      draft.PlayerSave.data.factionInvitations = nextInvites;
+
+      const faction = draft.FactionsSave[name] ?? { discovery: 'known' };
+      faction.alreadyInvited = shouldInvite;
+      draft.FactionsSave[name] = faction;
+    });
+  },
+
+  resetFaction(name) {
+    const { originalSave, currentSave } = get();
+    if (!originalSave || !currentSave) return;
+
+    const draft = cloneSave(currentSave);
+
+    if (Object.prototype.hasOwnProperty.call(originalSave.FactionsSave, name)) {
+      draft.FactionsSave[name] = cloneSave(originalSave.FactionsSave[name]);
+    } else {
+      delete draft.FactionsSave[name];
+    }
+
+    const originalMembers = originalSave.PlayerSave.data.factions || [];
+    const originalInvites = originalSave.PlayerSave.data.factionInvitations || [];
+
+    draft.PlayerSave.data.factions = draft.PlayerSave.data.factions.filter((f) => f !== name);
+    if (originalMembers.includes(name)) {
+      const originalIndex = originalMembers.indexOf(name);
+      draft.PlayerSave.data.factions = insertAtIndex(draft.PlayerSave.data.factions, name, originalIndex);
+    }
+
+    draft.PlayerSave.data.factionInvitations = draft.PlayerSave.data.factionInvitations.filter((f) => f !== name);
+    if (originalInvites.includes(name)) {
+      const originalIndex = originalInvites.indexOf(name);
+      draft.PlayerSave.data.factionInvitations = insertAtIndex(
+        draft.PlayerSave.data.factionInvitations,
+        name,
+        originalIndex
+      );
+    }
+
+    set({ currentSave: draft });
+  },
+
+  resetFactions() {
+    const { originalSave, currentSave } = get();
+    if (!originalSave || !currentSave) return;
+
+    const draft = cloneSave(currentSave);
+    draft.FactionsSave = cloneSave(originalSave.FactionsSave);
+    draft.PlayerSave.data.factions = cloneSave(originalSave.PlayerSave.data.factions);
+    draft.PlayerSave.data.factionInvitations = cloneSave(originalSave.PlayerSave.data.factionInvitations);
+
+    set({ currentSave: draft });
+  },
+
   addAugmentation(name, level, queued) {
     get().mutateCurrentSave((draft) => {
       const targetArray = queued
@@ -242,6 +372,19 @@ export const useSaveStore = create<SaveStoreState>((set, get) => ({
     const snapshot = (save: ParsedSaveData) => ({
       augmentations: save.PlayerSave.data.augmentations.filter(a => a.name !== 'NeuroFlux Governor'),
       queuedAugmentations: save.PlayerSave.data.queuedAugmentations.filter(a => a.name !== 'NeuroFlux Governor'),
+    });
+
+    return JSON.stringify(snapshot(originalSave)) !== JSON.stringify(snapshot(currentSave));
+  },
+
+  hasFactionChanges() {
+    const { originalSave, currentSave } = get();
+    if (!originalSave || !currentSave) return false;
+
+    const snapshot = (save: ParsedSaveData) => ({
+      factions: save.PlayerSave.data.factions,
+      factionInvitations: save.PlayerSave.data.factionInvitations,
+      factionsSave: save.FactionsSave,
     });
 
     return JSON.stringify(snapshot(originalSave)) !== JSON.stringify(snapshot(currentSave));

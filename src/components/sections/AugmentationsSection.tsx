@@ -1,7 +1,7 @@
 import { useState, useMemo, useCallback, useEffect } from 'react';
 import { Card, Button, Input, NumberInput, ResetAction } from '../ui';
 import { useSaveStore } from '../../store/save-store';
-import { buildAugmentationList, filterAugmentations, type AugmentationFilters } from '../../lib/augmentation-utils';
+import { buildAugmentationList, filterAugmentations, nameMatchesAugmentation, type AugmentationFilters } from '../../lib/augmentation-utils';
 import { AugmentationCard } from './AugmentationCard';
 
 interface NeuroFluxEditorProps {
@@ -217,31 +217,30 @@ export function AugmentationsSection() {
 
   const handleStatusChange = useCallback((key: string, newStatus: 'none' | 'queued' | 'installed') => {
     mutateCurrentSave((draft) => {
-      const installedAugs = [...(draft.PlayerSave.data.augmentations || [])];
-      const queuedAugs = [...(draft.PlayerSave.data.queuedAugmentations || [])];
-
       // Find the augmentation data to get both key and display name
       const aug = allAugmentations.find(a => a.key === key);
       if (!aug) return;
 
-      // Remove from both arrays (check both key and name)
-      const removeFromArray = (arr: Array<{ name: string; level: number }>, augKey: string, augName: string) => {
-        const index = arr.findIndex(a => a.name === augKey || a.name === augName);
-        if (index >= 0) arr.splice(index, 1);
-      };
+      const installedAugs = [...(draft.PlayerSave.data.augmentations || [])];
+      const queuedAugs = [...(draft.PlayerSave.data.queuedAugmentations || [])];
+      const canonicalName = aug.name;
 
-      removeFromArray(installedAugs, key, aug.name);
-      removeFromArray(queuedAugs, key, aug.name);
+      // Strip any existing entries using key, canonical name, or aliases to avoid duplicates.
+      const removeMatches = (arr: Array<{ name: string; level: number }>) =>
+        arr.filter((a) => !nameMatchesAugmentation(a.name, key));
+
+      const cleanedInstalled = removeMatches(installedAugs);
+      const cleanedQueued = removeMatches(queuedAugs);
 
       // Add to appropriate array based on new status (use internal key)
       if (newStatus === 'installed') {
-        installedAugs.push({ name: key, level: 1 });
+        cleanedInstalled.push({ name: canonicalName, level: 1 });
       } else if (newStatus === 'queued') {
-        queuedAugs.push({ name: key, level: 1 });
+        cleanedQueued.push({ name: canonicalName, level: 1 });
       }
 
-      draft.PlayerSave.data.augmentations = installedAugs;
-      draft.PlayerSave.data.queuedAugmentations = queuedAugs;
+      draft.PlayerSave.data.augmentations = cleanedInstalled;
+      draft.PlayerSave.data.queuedAugmentations = cleanedQueued;
     });
   }, [mutateCurrentSave, allAugmentations]);
 

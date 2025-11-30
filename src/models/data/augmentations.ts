@@ -131,7 +131,7 @@ export const ALL_AUGMENTATIONS = [
 
 export const AUGMENTATION_DATA: Record<string, AugmentationData> = {
   ADRPheromone1: {
-    name: "ADR Pheromone 1",
+    name: "ADR-V1 Pheromone Gene",
     repCost: 3750,
     moneyCost: 17500000,
     info: "The body is genetically re-engineered so that it produces the ADR-V1 pheromone, an artificial pheromone discovered by scientists. The ADR-V1 pheromone, when excreted, triggers feelings of admiration and approval in other people.",
@@ -139,7 +139,7 @@ export const AUGMENTATION_DATA: Record<string, AugmentationData> = {
     multipliers: { company_rep: 1.1, faction_rep: 1.1 },
   },
   ADRPheromone2: {
-    name: "ADR Pheromone 2",
+    name: "ADR-V2 Pheromone Gene",
     repCost: 62500,
     moneyCost: 550000000,
     info: "The body is genetically re-engineered so that it produces the ADR-V2 pheromone, which is similar to but more potent than ADR-V1. This pheromone, when excreted, triggers feelings of admiration, approval, and respect in others.",
@@ -393,7 +393,7 @@ export const AUGMENTATION_DATA: Record<string, AugmentationData> = {
     multipliers: {},
   },
   CordiARCReactor: {
-    name: "Cordiax Proprietary ARC Reactor",
+    name: "CordiARC Fusion Reactor",
     repCost: 1125000,
     moneyCost: 5000000000,
     info: "The thoracic cavity is equipped with a small chamber designed to hold and sustain hydrogen plasma. The plasma is used to generate power through nuclear fusion, providing limitless amounts of clean energy for the body.",

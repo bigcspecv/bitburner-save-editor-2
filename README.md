@@ -118,7 +118,7 @@ The editor is organized by **gameplay concepts**, not save file structure:
 - [x] Save file exporter
 - [x] State management (Zustand or Context)
 - [x] Section navigation scaffold (tabs + stubs)
-- [ ] Player section
+- [x] Player section
   - [x] Stats & skills editor
   - [x] Money, karma, entropy
   - [x] Multipliers (read-only)
@@ -135,10 +135,10 @@ The editor is organized by **gameplay concepts**, not save file structure:
   - [x] Add/remove augmentations
   - [x] Search/filter functionality
   - [ ] Filter by effect type (future enhancement)
-- [ ] Factions section
-  - [ ] Membership editor
-  - [ ] Reputation & favor
-  - [ ] Invitation manager
+- [x] Factions section
+  - [x] Membership editor
+  - [x] Reputation & favor
+  - [x] Invitation manager
 - [ ] Companies section
   - [ ] Company reputation & favor
   - [ ] Jobs manager

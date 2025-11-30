@@ -37,6 +37,26 @@ export interface AugmentationFilters {
 }
 
 /**
+ * Some augmentations had legacy display names; map them so old saves still resolve.
+ */
+export const AUGMENTATION_NAME_ALIASES: Record<string, string[]> = {
+  "ADR-V1 Pheromone Gene": ["ADR Pheromone 1", "ADR-V1 Pheromone"],
+  "ADR-V2 Pheromone Gene": ["ADR Pheromone 2", "ADR-V2 Pheromone"],
+  "CordiARC Fusion Reactor": ["Cordiax Proprietary ARC Reactor"],
+};
+
+/**
+ * Check whether a candidate name matches an augmentation by key, canonical name, or alias.
+ */
+export function nameMatchesAugmentation(candidate: string, augKey: string): boolean {
+  const augData = AUGMENTATION_DATA[augKey];
+  if (!augData) return false;
+
+  const aliases = AUGMENTATION_NAME_ALIASES[augData.name] ?? [];
+  return candidate === augKey || candidate === augData.name || aliases.includes(candidate);
+}
+
+/**
  * Get augmentation status from save data
  */
 export function getAugmentationStatus(
@@ -44,19 +64,11 @@ export function getAugmentationStatus(
   installedAugs: Array<{ name: string; level: number }>,
   queuedAugs: Array<{ name: string; level: number }>
 ): { status: AugmentationStatus; installedLevel?: number; queuedLevel?: number } {
-  const augData = AUGMENTATION_DATA[augKey];
-  if (!augData) {
-    return { status: "none" };
-  }
+  const installedMatches = installedAugs.filter((a) => nameMatchesAugmentation(a.name, augKey));
+  const queuedMatches = queuedAugs.filter((a) => nameMatchesAugmentation(a.name, augKey));
 
-  // Check both internal key and display name
-  const installedByKey = installedAugs.find((a) => a.name === augKey);
-  const installedByName = installedAugs.find((a) => a.name === augData.name);
-  const installed = installedByKey || installedByName;
-
-  const queuedByKey = queuedAugs.find((a) => a.name === augKey);
-  const queuedByName = queuedAugs.find((a) => a.name === augData.name);
-  const queued = queuedByKey || queuedByName;
+  const installed = installedMatches.sort((a, b) => b.level - a.level)[0];
+  const queued = queuedMatches.sort((a, b) => b.level - a.level)[0];
 
   if (installed) {
     return {
@@ -239,12 +251,8 @@ export function checkPrerequisites(
     const prereqData = AUGMENTATION_DATA[prereqKey];
     const prereqName = prereqData?.name || prereqKey;
 
-    const installed = installedAugs.some(
-      (a) => a.name === prereqKey || a.name === prereqName
-    );
-    const queued = queuedAugs.some(
-      (a) => a.name === prereqKey || a.name === prereqName
-    );
+    const installed = installedAugs.some((a) => nameMatchesAugmentation(a.name, prereqKey));
+    const queued = queuedAugs.some((a) => nameMatchesAugmentation(a.name, prereqKey));
 
     return {
       key: prereqKey,

@@ -19,6 +19,7 @@ export const FactionSchema = z.object({
   favor: z.number().optional(),
   playerReputation: z.number().optional(),
   alreadyInvited: z.boolean().optional(),
+  isMember: z.boolean().optional(),
   isBanned: z.boolean().optional(),
 });
 
