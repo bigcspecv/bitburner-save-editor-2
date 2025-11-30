@@ -69,6 +69,12 @@ interface SaveStoreState {
   hasHomeServerChanges: () => boolean;
   hasNetworkServerChanges: () => boolean;
   hasPurchasedServerChanges: () => boolean;
+  updateGangStats: (
+    updates: Partial<Pick<NonNullable<ParsedSaveData['PlayerSave']['data']['gang']>['data'],
+      'wanted' | 'respect' | 'territoryClashChance' | 'territoryWarfareEngaged' | 'notifyMemberDeath'>>
+  ) => void;
+  resetGang: () => void;
+  hasGangChanges: () => boolean;
   clearError: () => void;
 }
 
@@ -841,6 +847,50 @@ export const useSaveStore = create<SaveStoreState>((set, get) => ({
     if (!originalSave || !currentSave) return false;
 
     return JSON.stringify(originalSave) !== JSON.stringify(currentSave);
+  },
+
+  updateGangStats(updates) {
+    get().mutateCurrentSave((draft) => {
+      if (draft.PlayerSave.data.gang) {
+        draft.PlayerSave.data.gang.data = {
+          ...draft.PlayerSave.data.gang.data,
+          ...updates,
+        };
+      }
+    });
+  },
+
+  resetGang() {
+    const { originalSave, currentSave } = get();
+    if (!originalSave || !currentSave) return;
+
+    const draft = cloneSave(currentSave);
+    draft.PlayerSave.data.gang = cloneSave(originalSave.PlayerSave.data.gang);
+    draft.AllGangsSave = cloneSave(originalSave.AllGangsSave);
+
+    // Also reset the gang's faction reputation/favor
+    const gangFacName = originalSave.PlayerSave.data.gang?.data.facName;
+    if (gangFacName && originalSave.FactionsSave[gangFacName]) {
+      draft.FactionsSave[gangFacName] = cloneSave(originalSave.FactionsSave[gangFacName]);
+    }
+
+    set({ currentSave: draft });
+  },
+
+  hasGangChanges() {
+    const { originalSave, currentSave } = get();
+    if (!originalSave || !currentSave) return false;
+
+    const gangFacName = originalSave.PlayerSave.data.gang?.data.facName;
+
+    const snapshot = (save: ParsedSaveData) => ({
+      gang: save.PlayerSave.data.gang,
+      allGangs: save.AllGangsSave,
+      // Include the gang faction's data in change detection
+      gangFaction: gangFacName ? save.FactionsSave[gangFacName] : null,
+    });
+
+    return JSON.stringify(snapshot(originalSave)) !== JSON.stringify(snapshot(currentSave));
   },
 
   clearError() {
