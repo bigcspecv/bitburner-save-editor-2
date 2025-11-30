@@ -801,6 +801,7 @@ if (!result.success) {
 
 *Track significant updates to this context document here.*
 
+- **2025-11-29** - Factions section filters now include a corporate-only toggle and a city dropdown; company/city metadata is defined in `src/components/sections/FactionsSection.tsx` (`companyFactions` and `factionCityMap`, derived from Bitburner `FactionInfo`) for filter logic.
 - **2025-12-03** - Factions section bulk actions now mirror Augmentations: cards have selection checkboxes; bulk bar uses tri-state toggles for member/invited/banned; bulk set favor/reputation now uses a modal; discovery bulk buttons removed.
 - **2025-12-03** - `Checkbox` UI component supports tri-state (`triState` + `state`/`onStateChange`) with an indeterminate glyph; used for faction bulk toggles.
 

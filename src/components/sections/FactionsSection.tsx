@@ -17,6 +17,53 @@ const statusFilterButtons: Array<{ key: StatusFilterKey; label: string }> = [
 ];
 
 type DiscoveryFilter = 'all' | FactionDiscovery;
+type CityFilter = 'all' | 'Aevum' | 'Chongqing' | 'Ishima' | 'New Tokyo' | 'Sector-12' | 'Volhaven';
+
+type FiltersState = {
+  members: boolean;
+  invited: boolean;
+  changed: boolean;
+  discovery: DiscoveryFilter;
+  companies: boolean;
+  city: CityFilter;
+};
+
+const companyFactions = new Set<string>([
+  'ECorp',
+  'MegaCorp',
+  'Bachman & Associates',
+  'Blade Industries',
+  'NWO',
+  'Clarke Incorporated',
+  'OmniTek Incorporated',
+  'Four Sigma',
+  'KuaiGong International',
+  'Fulcrum Secret Technologies',
+]);
+
+const factionCityMap: Record<string, CityFilter[]> = {
+  Aevum: ['Aevum'],
+  Chongqing: ['Chongqing'],
+  Ishima: ['Ishima'],
+  'New Tokyo': ['New Tokyo'],
+  'Sector-12': ['Sector-12'],
+  Volhaven: ['Volhaven'],
+  'The Syndicate': ['Aevum', 'Sector-12'],
+  'The Dark Army': ['Chongqing'],
+  Tetrads: ['Chongqing', 'New Tokyo', 'Ishima'],
+  'Tian Di Hui': ['Chongqing', 'New Tokyo', 'Ishima'],
+  'Church of the Machine God': ['Chongqing'],
+};
+
+const cityOptions = [
+  { value: 'all', label: 'All Cities' },
+  { value: 'Aevum', label: 'Aevum' },
+  { value: 'Chongqing', label: 'Chongqing' },
+  { value: 'Ishima', label: 'Ishima' },
+  { value: 'New Tokyo', label: 'New Tokyo' },
+  { value: 'Sector-12', label: 'Sector-12' },
+  { value: 'Volhaven', label: 'Volhaven' },
+];
 
 export function FactionsSection() {
   const player = useSaveStore((state) => state.currentSave?.PlayerSave.data);
@@ -33,11 +80,13 @@ export function FactionsSection() {
   const isLoading = status === 'loading';
 
   const [search, setSearch] = useState('');
-  const [filters, setFilters] = useState({
+  const [filters, setFilters] = useState<FiltersState>({
     members: false,
     invited: false,
     changed: false,
     discovery: 'all' as DiscoveryFilter,
+    companies: false,
+    city: 'all',
   });
   const [selectedFactions, setSelectedFactions] = useState<Set<string>>(new Set());
   const [bulkValueModal, setBulkValueModal] = useState<{ type: 'reputation' | 'favor'; value: number } | null>(null);
@@ -81,6 +130,7 @@ export function FactionsSection() {
   const filteredFactions = useMemo(() => {
     const query = search.trim().toLowerCase();
     return factions.filter((faction) => {
+      const factionCities = factionCityMap[faction.name] ?? [];
       if (query && !faction.name.toLowerCase().includes(query)) {
         return false;
       }
@@ -88,6 +138,8 @@ export function FactionsSection() {
       if (filters.invited && !faction.isInvited) return false;
       if (filters.changed && !faction.changed) return false;
       if (filters.discovery !== 'all' && faction.faction.discovery !== filters.discovery) return false;
+      if (filters.companies && !companyFactions.has(faction.name)) return false;
+      if (filters.city !== 'all' && !factionCities.includes(filters.city)) return false;
       return true;
     });
   }, [factions, search, filters]);
@@ -149,8 +201,14 @@ export function FactionsSection() {
     filters.members ||
     filters.invited ||
     filters.changed ||
-    filters.discovery !== 'all';
+    filters.discovery !== 'all' ||
+    filters.companies ||
+    filters.city !== 'all';
   const selectedCount = selectedFactions.size;
+  const companyFactionCount = useMemo(
+    () => factions.filter((f) => companyFactions.has(f.name)).length,
+    [factions]
+  );
 
   const selectionSnapshot = useMemo(() => {
     const selected = factions.filter((f) => selectedFactions.has(f.name));
@@ -203,129 +261,166 @@ export function FactionsSection() {
   return (
     <>
       <div className="space-y-4">
-      <Card
-        title="Factions"
-        subtitle="Membership, invitations, reputation, and favor"
-        actions={
-          <ResetAction
-            title="Reset All Factions"
-            hasChanges={hasFactionChanges}
-            onReset={resetFactions}
-            disabled={isLoading}
-          />
-        }
-      >
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-3">
-          <div className="border border-terminal-primary/50 bg-terminal-dim/10 p-3">
-            <h4 className="text-terminal-secondary uppercase tracking-wide text-sm mb-1">
-              Members
-            </h4>
-            <p className="text-terminal-primary text-2xl">{memberCount}</p>
-            <p className="text-terminal-dim text-xs mt-1">
-              Joined factions listed in player data
-            </p>
-          </div>
-
-          <div className="border border-terminal-primary/50 bg-terminal-dim/10 p-3">
-            <h4 className="text-terminal-secondary uppercase tracking-wide text-sm mb-1">
-              Invitations
-            </h4>
-            <p className="text-terminal-primary text-2xl">{inviteCount}</p>
-            <p className="text-terminal-dim text-xs mt-1">
-              Pending invites you can accept later
-            </p>
-          </div>
-
-          <div className="border border-terminal-primary/50 bg-terminal-dim/10 p-3">
-            <h4 className="text-terminal-secondary uppercase tracking-wide text-sm mb-1">
-              Known / Rumored
-            </h4>
-            <p className="text-terminal-primary text-2xl">
-              {knownCount} / {factions.length - knownCount}
-            </p>
-            <p className="text-terminal-dim text-xs mt-1">
-              Discovery state from the save file
-            </p>
-          </div>
-
-          <div className="border border-terminal-primary/50 bg-terminal-dim/10 p-3">
-            <h4 className="text-terminal-secondary uppercase tracking-wide text-sm mb-1">
-              Changes
-            </h4>
-            <p className="text-terminal-primary text-2xl">{changedCount}</p>
-            <p className="text-terminal-dim text-xs mt-1">
-              Modified factions vs original save
-            </p>
-          </div>
-        </div>
-
-        <div className="mt-4 border border-terminal-primary/30 p-3 space-y-3">
-          <div className="flex items-start justify-between gap-3">
-            <div className="flex-1">
-              <Input
-                label="Search"
-                value={search}
-                onChange={(e) => setSearch(e.target.value)}
-                placeholder="Search by faction name..."
-              />
+        <Card
+          title="Factions"
+          subtitle="Membership, invitations, reputation, and favor"
+          actions={
+            <ResetAction
+              title="Reset All Factions"
+              hasChanges={hasFactionChanges}
+              onReset={resetFactions}
+              disabled={isLoading}
+            />
+          }
+        >
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-3">
+            <div className="border border-terminal-primary/50 bg-terminal-dim/10 p-3">
+              <h4 className="text-terminal-secondary uppercase tracking-wide text-sm mb-1">
+                Members
+              </h4>
+              <p className="text-terminal-primary text-2xl">{memberCount}</p>
+              <p className="text-terminal-dim text-xs mt-1">
+                Joined factions listed in player data
+              </p>
             </div>
-            {hasActiveFilters && (
-              <Button
-                variant="secondary"
-                size="sm"
-                onClick={() => {
-                  setSearch('');
-                  setFilters({ members: false, invited: false, changed: false, discovery: 'all' });
-                }}
-              >
-                Clear Filters
-              </Button>
-            )}
+
+            <div className="border border-terminal-primary/50 bg-terminal-dim/10 p-3">
+              <h4 className="text-terminal-secondary uppercase tracking-wide text-sm mb-1">
+                Invitations
+              </h4>
+              <p className="text-terminal-primary text-2xl">{inviteCount}</p>
+              <p className="text-terminal-dim text-xs mt-1">
+                Pending invites you can accept later
+              </p>
+            </div>
+
+            <div className="border border-terminal-primary/50 bg-terminal-dim/10 p-3">
+              <h4 className="text-terminal-secondary uppercase tracking-wide text-sm mb-1">
+                Known / Rumored
+              </h4>
+              <p className="text-terminal-primary text-2xl">
+                {knownCount} / {factions.length - knownCount}
+              </p>
+              <p className="text-terminal-dim text-xs mt-1">
+                Discovery state from the save file
+              </p>
+            </div>
+
+            <div className="border border-terminal-primary/50 bg-terminal-dim/10 p-3">
+              <h4 className="text-terminal-secondary uppercase tracking-wide text-sm mb-1">
+                Changes
+              </h4>
+              <p className="text-terminal-primary text-2xl">{changedCount}</p>
+              <p className="text-terminal-dim text-xs mt-1">
+                Modified factions vs original save
+              </p>
+            </div>
           </div>
 
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-3">
-            <div>
-              <p className="text-terminal-dim text-xs uppercase font-mono mb-2">Status Filters</p>
-              <div className="flex flex-wrap gap-2">
-                {statusFilterButtons.map(({ key, label }) => {
-                  const active = filters[key];
-                  return (
+          <div className="mt-4 border border-terminal-primary/30 p-3 space-y-3">
+            <div className="flex items-start justify-between gap-3">
+              <div className="flex-1">
+                <Input
+                  label="Search"
+                  value={search}
+                  onChange={(e) => setSearch(e.target.value)}
+                  placeholder="Search by faction name..."
+                />
+              </div>
+              {hasActiveFilters && (
+                <Button
+                  variant="secondary"
+                  size="sm"
+                  onClick={() => {
+                    setSearch('');
+                    setFilters({
+                      members: false,
+                      invited: false,
+                      changed: false,
+                      discovery: 'all',
+                      companies: false,
+                      city: 'all',
+                    });
+                  }}
+                >
+                  Clear Filters
+                </Button>
+              )}
+            </div>
+
+            <div className="grid grid-cols-1 lg:grid-cols-4 gap-3">
+              <div className="space-y-3">
+                <div>
+                  <p className="text-terminal-dim text-xs uppercase font-mono mb-2">Status Filters</p>
+                  <div className="flex flex-wrap gap-2">
+                    {statusFilterButtons.map(({ key, label }) => {
+                      const active = filters[key];
+                      return (
+                        <Button
+                          key={key}
+                          variant={active ? 'secondary' : 'primary'}
+                          size="sm"
+                          onClick={() =>
+                            setFilters((prev) => ({
+                              ...prev,
+                              [key]: !prev[key],
+                            }))
+                          }
+                        >
+                          {label}
+                        </Button>
+                      );
+                    })}
+                  </div>
+                </div>
+
+                <div>
+                  <p className="text-terminal-dim text-xs uppercase font-mono mb-2">Faction Type</p>
+                  <div className="flex flex-wrap gap-2">
                     <Button
-                      key={key}
-                      variant={active ? 'secondary' : 'primary'}
+                      variant={filters.companies ? 'secondary' : 'primary'}
                       size="sm"
                       onClick={() =>
                         setFilters((prev) => ({
                           ...prev,
-                          [key]: !prev[key],
+                          companies: !prev.companies,
                         }))
                       }
                     >
-                      {label}
+                      Companies
                     </Button>
-                  );
-                })}
+                  </div>
+                </div>
+              </div>
+
+              <div>
+                <p className="text-terminal-dim text-xs uppercase font-mono mb-2">City</p>
+                <Select
+                  options={cityOptions}
+                  value={filters.city}
+                  onChange={(value) => setFilters((prev) => ({ ...prev, city: value as CityFilter }))}
+                />
+              </div>
+
+              <div>
+                <p className="text-terminal-dim text-xs uppercase font-mono mb-2">Discovery</p>
+                <Select
+                  options={[
+                    { value: 'all', label: 'All' },
+                    ...discoveryOptions,
+                  ]}
+                  value={filters.discovery}
+                  onChange={(value) => setFilters((prev) => ({ ...prev, discovery: value as DiscoveryFilter }))}
+                />
+              </div>
+
+              <div className="self-end text-terminal-dim text-xs font-mono space-y-1">
+                <p>&gt; Filtered results: {filteredFactions.length} / {factions.length}</p>
+                <p>&gt; Banned factions: {bannedCount}</p>
+                <p>&gt; Company factions: {companyFactionCount}</p>
               </div>
             </div>
-
-            <div>
-              <p className="text-terminal-dim text-xs uppercase font-mono mb-2">Discovery</p>
-              <Select
-                options={[
-                  { value: 'all', label: 'All' },
-                  ...discoveryOptions,
-                ]}
-                value={filters.discovery}
-                onChange={(value) => setFilters((prev) => ({ ...prev, discovery: value as DiscoveryFilter }))}
-              />
-            </div>
-
-            <div className="self-end text-terminal-dim text-xs font-mono">
-              <p>&gt; Filtered results: {filteredFactions.length} / {factions.length}</p>
-              <p>&gt; Banned factions: {bannedCount}</p>
-            </div>
           </div>
-        </div>
 
         <div className="mt-4 border border-terminal-primary/30 p-3">
           <div className="flex items-start justify-between gap-3 mb-3">
@@ -484,11 +579,11 @@ export function FactionsSection() {
                       min={0}
                       step={1}
                     />
-                    </div>
+                  </div>
 
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                      <Select
-                        label="Discovery"
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    <Select
+                      label="Discovery"
                       options={discoveryOptions}
                       value={discovery}
                       onChange={(value) => updateFactionStats(name, { discovery: value as FactionDiscovery })}
