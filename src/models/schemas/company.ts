@@ -4,7 +4,7 @@ import { z } from 'zod';
  * Company schema - represents a company in the game
  */
 export const CompanySchema = z.object({
-  playerReputation: z.number(),
+  playerReputation: z.number().optional().default(0),
   favor: z.number().optional(),
   isPlayerEmployed: z.boolean().optional(),
 });
