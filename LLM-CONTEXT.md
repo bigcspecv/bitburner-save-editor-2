@@ -799,11 +799,21 @@ if (!result.success) {
 
 ## Faction Metadata
 
-Faction metadata (enemies and work types) is stored in `src/models/faction-data.ts`, extracted from Bitburner source code.
+Comprehensive faction metadata is stored in `src/models/faction-data.ts`, extracted from Bitburner v2.6.2+ source code.
+
+### Metadata Fields
+
+Each faction has the following metadata:
+- **Category**: Early Game, City, Hacker Group, Megacorporation, Criminal, Endgame, or Special
+- **Cities**: Associated city locations (e.g., Aevum, Chongqing)
+- **Company**: Associated company for corporate factions (e.g., ECorp, MegaCorp)
+- **Enemies**: List of mutually exclusive factions
+- **Work Types**: Hacking, Field, and/or Security work availability
+- **Requirements**: Human-readable join requirements (e.g., "$40m", "Hacking 100")
 
 ### Enemy Factions
 
-Some city factions have enemy relationships. Joining one prevents joining its enemies:
+City factions have enemy relationships - joining one prevents joining its enemies:
 - **Aevum** ↔ Chongqing, New Tokyo, Ishima, Volhaven
 - **Chongqing** ↔ Sector-12, Aevum, Volhaven
 - **Ishima** ↔ Sector-12, Aevum, Volhaven
@@ -811,7 +821,7 @@ Some city factions have enemy relationships. Joining one prevents joining its en
 - **Sector-12** ↔ Chongqing, New Tokyo, Ishima, Volhaven
 - **Volhaven** ↔ All other city factions
 
-The UI displays a red octagon icon with black exclamation point next to factions with enemies. Hovering shows a tooltip listing enemy factions.
+Red octagon icon with exclamation point displays for factions with enemies. Tooltip lists all enemy factions.
 
 ### Work Types
 
@@ -820,9 +830,24 @@ Factions offer different types of work to earn reputation:
 - **Field Work** - Physical/intelligence work (blue compass icon)
 - **Security Work** - Combat/security tasks (white shield with star icon)
 
-Special factions (Bladeburners, Church of the Machine God, Shadows of Anarchy) don't offer standard work - they have unique reputation mechanics.
+Special factions (Bladeburners, Church of the Machine God, Shadows of Anarchy) don't offer standard work.
 
-The `getFactionMetadata(factionName)` helper returns work types and enemies for any faction. Icons are displayed in faction cards via the `<FactionIcons>` component with tooltips explaining each work type.
+### Helper Functions
+
+- `getFactionMetadata(name)` - Returns full metadata for a faction
+- `getCompanyFactions()` - Returns all megacorporation factions
+- `getFactionsByCity(city)` - Returns factions in a specific city
+- `getFactionsByCategory(category)` - Returns factions by category
+- `offersWork(name)` - Checks if faction offers any work type
+
+### UI Display
+
+Faction cards display:
+- Category and discovery status
+- Associated cities and company
+- Work type icons with tooltips
+- Enemy faction warning icon
+- Join requirements (human-readable bullet list)
 
 ---
 
@@ -834,6 +859,7 @@ The `getFactionMetadata(factionName)` helper returns work types and enemies for 
 - **2025-11-29** - Companies section implemented with reputation/favor editors and job management. Store exposes `updateCompanyStats`, `setCurrentJob`, `resetCompany`, `resetCompanies`, and `hasCompanyChanges`. Company data (ALL_COMPANIES, COMPANY_JOBS, COMPANY_CITY_MAP) stored in `src/models/company-data.ts`. UI includes search, city filter, and status filters (employed/has reputation/modified). Job dropdown validates against available positions per company.
 - **2025-11-29** - Factions section filters now include a corporate-only toggle and a city dropdown; company/city metadata is defined in `src/components/sections/FactionsSection.tsx` (`companyFactions` and `factionCityMap`, derived from Bitburner `FactionInfo`) for filter logic.
 - **2025-11-29** - Added faction metadata system with enemy factions and work type indicators. `src/models/faction-data.ts` contains metadata extracted from Bitburner FactionInfo (enemies, offerHackingWork, offerFieldWork, offerSecurityWork). New UI components: `Tooltip` (terminal-styled hover tooltips), `FactionIcons` (work type and enemy faction indicators), `HackingWorkIcon` (green ">|"), `SecurityWorkIcon` (white shield with star), `FieldWorkIcon` (blue compass), `EnemyFactionIcon` (red octagon with exclamation). Icons display in faction cards with hover tooltips explaining work types and listing enemy factions.
+- **2025-11-29** - Expanded faction metadata to include comprehensive data: categories (Early Game, City, Hacker Group, Megacorporation, Criminal, Endgame, Special), associated cities, company affiliations, and human-readable join requirements. Added helper functions: `getCompanyFactions()`, `getFactionsByCity()`, `getFactionsByCategory()`, `getAllCities()`, `offersWork()`. Faction cards now display category, cities, company, and requirements list. Removed ALL hardcoded faction metadata from FactionsSection (companyFactions, factionCityMap, cityOptions) - city filter dropdown now dynamically populated from `getAllCities()`. Single source of truth is `faction-data.ts`.
 - **2025-12-03** - Factions section bulk actions now mirror Augmentations: cards have selection checkboxes; bulk bar uses tri-state toggles for member/invited/banned; bulk set favor/reputation now uses a modal; discovery bulk buttons removed.
 - **2025-12-03** - `Checkbox` UI component supports tri-state (`triState` + `state`/`onStateChange`) with an indeterminate glyph; used for faction bulk toggles.
 

@@ -2,7 +2,7 @@ import { useCallback, useMemo, useState } from 'react';
 import { Card, Input, NumberInput, Checkbox, Button, Select, ResetAction, Modal, FactionIcons } from '../ui';
 import { useSaveStore } from '../../store/save-store';
 import type { FactionDiscovery } from '../../models/types';
-import { getFactionMetadata } from '../../models/faction-data';
+import { getFactionMetadata, getCompanyFactions, getAllCities } from '../../models/faction-data';
 
 const discoveryOptions = [
   { value: 'known', label: 'Known' },
@@ -18,7 +18,6 @@ const statusFilterButtons: Array<{ key: StatusFilterKey; label: string }> = [
 ];
 
 type DiscoveryFilter = 'all' | FactionDiscovery;
-type CityFilter = 'all' | 'Aevum' | 'Chongqing' | 'Ishima' | 'New Tokyo' | 'Sector-12' | 'Volhaven';
 
 type FiltersState = {
   members: boolean;
@@ -26,44 +25,14 @@ type FiltersState = {
   changed: boolean;
   discovery: DiscoveryFilter;
   companies: boolean;
-  city: CityFilter;
+  city: string;
 };
 
-const companyFactions = new Set<string>([
-  'ECorp',
-  'MegaCorp',
-  'Bachman & Associates',
-  'Blade Industries',
-  'NWO',
-  'Clarke Incorporated',
-  'OmniTek Incorporated',
-  'Four Sigma',
-  'KuaiGong International',
-  'Fulcrum Secret Technologies',
-]);
-
-const factionCityMap: Record<string, CityFilter[]> = {
-  Aevum: ['Aevum'],
-  Chongqing: ['Chongqing'],
-  Ishima: ['Ishima'],
-  'New Tokyo': ['New Tokyo'],
-  'Sector-12': ['Sector-12'],
-  Volhaven: ['Volhaven'],
-  'The Syndicate': ['Aevum', 'Sector-12'],
-  'The Dark Army': ['Chongqing'],
-  Tetrads: ['Chongqing', 'New Tokyo', 'Ishima'],
-  'Tian Di Hui': ['Chongqing', 'New Tokyo', 'Ishima'],
-  'Church of the Machine God': ['Chongqing'],
-};
-
+// Get company factions and cities from centralized metadata
+const companyFactions = new Set<string>(getCompanyFactions());
 const cityOptions = [
   { value: 'all', label: 'All Cities' },
-  { value: 'Aevum', label: 'Aevum' },
-  { value: 'Chongqing', label: 'Chongqing' },
-  { value: 'Ishima', label: 'Ishima' },
-  { value: 'New Tokyo', label: 'New Tokyo' },
-  { value: 'Sector-12', label: 'Sector-12' },
-  { value: 'Volhaven', label: 'Volhaven' },
+  ...getAllCities().map((city) => ({ value: city, label: city })),
 ];
 
 export function FactionsSection() {
@@ -131,7 +100,8 @@ export function FactionsSection() {
   const filteredFactions = useMemo(() => {
     const query = search.trim().toLowerCase();
     return factions.filter((faction) => {
-      const factionCities = factionCityMap[faction.name] ?? [];
+      const metadata = getFactionMetadata(faction.name);
+      const factionCities = metadata.cities ?? [];
       if (query && !faction.name.toLowerCase().includes(query)) {
         return false;
       }
@@ -399,7 +369,7 @@ export function FactionsSection() {
                 <Select
                   options={cityOptions}
                   value={filters.city}
-                  onChange={(value) => setFilters((prev) => ({ ...prev, city: value as CityFilter }))}
+                  onChange={(value) => setFilters((prev) => ({ ...prev, city: value as string }))}
                 />
               </div>
 
@@ -541,16 +511,28 @@ export function FactionsSection() {
                   <div className="flex items-start justify-between gap-2 mb-2">
                     <div className="flex items-start gap-2">
                       <Checkbox checked={isSelected} onChange={() => handleToggleSelect(name)} />
-                      <div>
-                        <div className="flex items-center gap-2">
+                      <div className="flex-1">
+                        <div className="flex items-center gap-2 mb-1">
                           <h3 className="text-terminal-secondary uppercase tracking-wide text-lg">
                             {name}
                           </h3>
                           <FactionIcons factionName={name} metadata={metadata} />
                         </div>
-                        <p className="text-terminal-dim text-xs">
-                          Discovery: {discovery}
-                        </p>
+                        <div className="space-y-0.5">
+                          <p className="text-terminal-dim text-xs">
+                            Discovery: {discovery}
+                            {metadata.category && (
+                              <span className="ml-2">• Category: {metadata.category}</span>
+                            )}
+                          </p>
+                          {(metadata.cities || metadata.company) && (
+                            <p className="text-terminal-dim text-xs">
+                              {metadata.cities && `Cities: ${metadata.cities.join(', ')}`}
+                              {metadata.cities && metadata.company && ' • '}
+                              {metadata.company && `Company: ${metadata.company}`}
+                            </p>
+                          )}
+                        </div>
                       </div>
                     </div>
                     <div className="flex items-center gap-2">
@@ -615,6 +597,17 @@ export function FactionsSection() {
                       />
                     </div>
                   </div>
+
+                  {metadata.requirements && metadata.requirements.length > 0 && (
+                    <div className="mt-3 pt-3 border-t border-terminal-primary/30">
+                      <p className="text-terminal-dim text-xs uppercase font-mono mb-1">Join Requirements:</p>
+                      <ul className="text-terminal-dim text-xs space-y-0.5 list-disc list-inside">
+                        {metadata.requirements.map((req, idx) => (
+                          <li key={idx}>{req}</li>
+                        ))}
+                      </ul>
+                    </div>
+                  )}
                 </div>
               );
             })}
