@@ -801,6 +801,7 @@ if (!result.success) {
 
 *Track significant updates to this context document here.*
 
+- **2025-12-03** - Augmentation prerequisites enforced via UI disabling (install requires installed prereqs; queue requires owned prereqs); automatic cascading/demotion was removed—status changes now only touch the targeted augmentation. Cards still show prereq warnings. Use canonical augmentation names when writing to save; rely on `nameMatchesAugmentation` for alias lookups.
 - **2025-12-02** - Factions section implemented with membership/invite toggles, discovery/banned controls, and rep/favor editors. Store exposes `updateFactionStats`, `setFactionMembership`, `setFactionInvitation`, `resetFaction`, `resetFactions`, and `hasFactionChanges`; faction schema now allows `isMember`. Membership/invitation helpers sync PlayerSave arrays with FactionsSave flags and preserve original ordering on resets.
 - **2025-12-02** - CordiARC aug canonical name corrected to "CordiARC Fusion Reactor"; alias accepts legacy "Cordiax Proprietary ARC Reactor".
 - **2025-12-02** - Corrected ADR Pheromone canonical names to match game (`ADR-V1/ADR-V2 Pheromone Gene`); alias map now accepts legacy labels (e.g., "ADR Pheromone 1"). Install/export should now match in-game naming.

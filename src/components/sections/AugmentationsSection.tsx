@@ -1,7 +1,13 @@
 import { useState, useMemo, useCallback, useEffect } from 'react';
 import { Card, Button, Input, NumberInput, ResetAction } from '../ui';
 import { useSaveStore } from '../../store/save-store';
-import { buildAugmentationList, filterAugmentations, nameMatchesAugmentation, type AugmentationFilters } from '../../lib/augmentation-utils';
+import {
+  buildAugmentationList,
+  filterAugmentations,
+  nameMatchesAugmentation,
+  type AugmentationFilters,
+} from '../../lib/augmentation-utils';
+import { AUGMENTATION_DATA } from '../../models/data/augmentations';
 import { AugmentationCard } from './AugmentationCard';
 
 interface NeuroFluxEditorProps {
@@ -217,32 +223,39 @@ export function AugmentationsSection() {
 
   const handleStatusChange = useCallback((key: string, newStatus: 'none' | 'queued' | 'installed') => {
     mutateCurrentSave((draft) => {
-      // Find the augmentation data to get both key and display name
-      const aug = allAugmentations.find(a => a.key === key);
-      if (!aug) return;
+      const installedAugs = draft.PlayerSave.data.augmentations || [];
+      const queuedAugs = draft.PlayerSave.data.queuedAugmentations || [];
+      const canonicalName = AUGMENTATION_DATA[key]?.name ?? key;
 
-      const installedAugs = [...(draft.PlayerSave.data.augmentations || [])];
-      const queuedAugs = [...(draft.PlayerSave.data.queuedAugmentations || [])];
-      const canonicalName = aug.name;
+      // Detect current status to avoid needless churn/order changes
+      const isInstalled = installedAugs.some((aug) => nameMatchesAugmentation(aug.name, key));
+      const isQueued = !isInstalled && queuedAugs.some((aug) => nameMatchesAugmentation(aug.name, key));
+      const currentStatus: 'none' | 'queued' | 'installed' = isInstalled ? 'installed' : isQueued ? 'queued' : 'none';
 
-      // Strip any existing entries using key, canonical name, or aliases to avoid duplicates.
-      const removeMatches = (arr: Array<{ name: string; level: number }>) =>
-        arr.filter((a) => !nameMatchesAugmentation(a.name, key));
-
-      const cleanedInstalled = removeMatches(installedAugs);
-      const cleanedQueued = removeMatches(queuedAugs);
-
-      // Add to appropriate array based on new status (use internal key)
-      if (newStatus === 'installed') {
-        cleanedInstalled.push({ name: canonicalName, level: 1 });
-      } else if (newStatus === 'queued') {
-        cleanedQueued.push({ name: canonicalName, level: 1 });
+      if (currentStatus === newStatus) {
+        return;
       }
 
-      draft.PlayerSave.data.augmentations = cleanedInstalled;
-      draft.PlayerSave.data.queuedAugmentations = cleanedQueued;
+      const removeMatches = (arr: Array<{ name: string; level: number }>) =>
+        arr.filter((aug) => !nameMatchesAugmentation(aug.name, key));
+
+      let nextInstalled = removeMatches(installedAugs);
+      let nextQueued = removeMatches(queuedAugs);
+
+      if (newStatus === 'installed') {
+        nextInstalled = [...nextInstalled, { name: canonicalName, level: 1 }];
+      } else if (newStatus === 'queued') {
+        nextQueued = [...nextQueued, { name: canonicalName, level: 1 }];
+      }
+
+      // Replace the data object to ensure subscribers see the change
+      draft.PlayerSave.data = {
+        ...draft.PlayerSave.data,
+        augmentations: nextInstalled,
+        queuedAugmentations: nextQueued,
+      };
     });
-  }, [mutateCurrentSave, allAugmentations]);
+  }, [mutateCurrentSave]);
 
   const handleAugmentationReset = useCallback((key: string) => {
     const originalAug = originalAugmentations.find(a => a.key === key);
@@ -298,11 +311,36 @@ export function AugmentationsSection() {
   }, []);
 
   const handleBulkStatusChange = useCallback((newStatus: 'none' | 'queued' | 'installed') => {
-    selectedAugmentations.forEach((key) => {
-      handleStatusChange(key, newStatus);
+    mutateCurrentSave((draft) => {
+      let installed = draft.PlayerSave.data.augmentations || [];
+      let queued = draft.PlayerSave.data.queuedAugmentations || [];
+
+      selectedAugmentations.forEach((key) => {
+        const canonicalName = AUGMENTATION_DATA[key]?.name ?? key;
+        const removeMatches = (arr: Array<{ name: string; level: number }>) =>
+          arr.filter((aug) => !nameMatchesAugmentation(aug.name, key));
+
+        let nextInstalled = removeMatches(installed);
+        let nextQueued = removeMatches(queued);
+
+        if (newStatus === 'installed') {
+          nextInstalled = [...nextInstalled, { name: canonicalName, level: 1 }];
+        } else if (newStatus === 'queued') {
+          nextQueued = [...nextQueued, { name: canonicalName, level: 1 }];
+        }
+
+        installed = nextInstalled;
+        queued = nextQueued;
+      });
+
+      draft.PlayerSave.data = {
+        ...draft.PlayerSave.data,
+        augmentations: installed,
+        queuedAugmentations: queued,
+      };
     });
     setSelectedAugmentations(new Set());
-  }, [selectedAugmentations, handleStatusChange]);
+  }, [mutateCurrentSave, selectedAugmentations]);
 
   const installedCount = allAugmentations.filter(a => a.status === 'installed').length;
   const queuedCount = allAugmentations.filter(a => a.status === 'queued').length;

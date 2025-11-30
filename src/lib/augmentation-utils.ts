@@ -235,6 +235,8 @@ export function checkPrerequisites(
   queuedAugs: Array<{ name: string; level: number }>
 ): {
   allMet: boolean;
+  allOwned: boolean;
+  allInstalled: boolean;
   prereqs: Array<{
     key: string;
     name: string;
@@ -262,9 +264,11 @@ export function checkPrerequisites(
     };
   });
 
-  const allMet = prereqStatuses.every((p) => p.installed || p.queued);
+  const allOwned = prereqStatuses.every((p) => p.installed || p.queued);
+  const allInstalled = prereqStatuses.every((p) => p.installed);
+  const allMet = allOwned;
 
-  return { allMet, prereqs: prereqStatuses };
+  return { allMet, allOwned, allInstalled, prereqs: prereqStatuses };
 }
 
 /**
@@ -324,4 +328,119 @@ export function getEffectLabel(effectKey: keyof AugmentationMultipliers): string
   };
 
   return labels[effectKey] || effectKey;
+}
+
+/**
+ * Remove every instance (key, canonical name, or alias) of an augmentation from a list.
+ */
+function removeAugmentationEntries(
+  list: Array<{ name: string; level: number }>,
+  augKey: string
+): Array<{ name: string; level: number }> {
+  return list.filter((entry) => !nameMatchesAugmentation(entry.name, augKey));
+}
+
+function getCanonicalAugName(augKey: string): string {
+  return AUGMENTATION_DATA[augKey]?.name ?? augKey;
+}
+
+/**
+ * Enforce prerequisite rules by demoting or removing augmentations whose prerequisites
+ * are no longer satisfied. Installed -> queued when prereqs are only queued; queued -> none
+ * when prereqs are missing entirely.
+ */
+export function enforcePrerequisiteConsistency(
+  installedAugs: Array<{ name: string; level: number }>,
+  queuedAugs: Array<{ name: string; level: number }>
+): {
+  installed: Array<{ name: string; level: number }>;
+  queued: Array<{ name: string; level: number }>;
+} {
+  let installed = [...installedAugs];
+  let queued = [...queuedAugs];
+
+  const maxPasses = 10;
+  for (let pass = 0; pass < maxPasses; pass++) {
+    let changed = false;
+
+    for (const augKey of ALL_AUGMENTATIONS) {
+      const status = getAugmentationStatus(augKey, installed, queued).status;
+      if (status === "none") continue;
+
+      const prereqs = checkPrerequisites(augKey, installed, queued);
+
+      if (status === "installed" && !prereqs.allInstalled) {
+        installed = removeAugmentationEntries(installed, augKey);
+        queued = removeAugmentationEntries(queued, augKey);
+
+        if (prereqs.allOwned) {
+          queued = [...queued, { name: getCanonicalAugName(augKey), level: 1 }];
+        }
+
+        changed = true;
+      } else if (status === "queued" && !prereqs.allOwned) {
+        queued = removeAugmentationEntries(queued, augKey);
+        changed = true;
+      }
+    }
+
+    if (!changed) {
+      break;
+    }
+  }
+
+  return { installed, queued };
+}
+
+/**
+ * Apply a status change to an augmentation while respecting prerequisite rules.
+ * Invalid requests (e.g., installing without installed prerequisites) are ignored.
+ */
+export function applyAugmentationStatus(
+  augKey: string,
+  newStatus: AugmentationStatus,
+  installedAugs: Array<{ name: string; level: number }>,
+  queuedAugs: Array<{ name: string; level: number }>,
+  options?: { enforceDependents?: boolean }
+): {
+  installed: Array<{ name: string; level: number }>;
+  queued: Array<{ name: string; level: number }>;
+} {
+  const enforceDependents = options?.enforceDependents ?? true;
+  const augData = AUGMENTATION_DATA[augKey];
+
+  // If we don't recognize the augmentation, leave state untouched.
+  if (!augData) {
+    return { installed: [...installedAugs], queued: [...queuedAugs] };
+  }
+
+  let installed = [...installedAugs];
+  let queued = [...queuedAugs];
+
+  const prereqStatus = checkPrerequisites(augKey, installed, queued);
+
+  // Prevent setting statuses that prerequisites don't allow
+  if (newStatus === "installed" && !prereqStatus.allInstalled) {
+    return { installed, queued };
+  }
+
+  if (newStatus === "queued" && !prereqStatus.allOwned) {
+    return { installed, queued };
+  }
+
+  // Remove any existing entries (key/canonical/aliases) to avoid duplicates
+  installed = removeAugmentationEntries(installed, augKey);
+  queued = removeAugmentationEntries(queued, augKey);
+
+  if (newStatus === "installed") {
+    installed = [...installed, { name: augData.name, level: 1 }];
+  } else if (newStatus === "queued") {
+    queued = [...queued, { name: augData.name, level: 1 }];
+  }
+
+  if (enforceDependents) {
+    return enforcePrerequisiteConsistency(installed, queued);
+  }
+
+  return { installed, queued };
 }

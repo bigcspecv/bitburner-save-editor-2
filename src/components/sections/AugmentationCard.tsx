@@ -40,11 +40,13 @@ export function AugmentationCard({
       }));
   }, [augmentation.multipliers]);
 
-  const canInstallOrQueue = prereqCheck.allMet;
+  const canQueue = prereqCheck.allOwned;
+  const canInstall = prereqCheck.allInstalled;
+  const hasPrereqs = prereqCheck.prereqs.length > 0;
   const statusOptions = [
     { value: "none", label: "None" },
-    { value: "queued", label: "Queued", disabled: !canInstallOrQueue },
-    { value: "installed", label: "Installed", disabled: !canInstallOrQueue },
+    { value: "queued", label: "Queued", disabled: hasPrereqs && !canQueue },
+    { value: "installed", label: "Installed", disabled: hasPrereqs && !canInstall },
   ];
 
   return (
@@ -74,10 +76,19 @@ export function AugmentationCard({
               <span className="ml-2 text-xs text-terminal-dim">[SPECIAL]</span>
             )}
           </h3>
-          {!prereqCheck.allMet && (
-            <div className="text-red-500 text-xs font-mono">
-              ⚠ Missing prerequisites
-            </div>
+          {hasPrereqs && (
+            <>
+              {!prereqCheck.allOwned && (
+                <div className="text-red-500 text-xs font-mono">
+                  ✕ Missing prerequisites
+                </div>
+              )}
+              {prereqCheck.allOwned && !prereqCheck.allInstalled && (
+                <div className="text-yellow-500 text-xs font-mono">
+                  ⚠ Prereqs only queued
+                </div>
+              )}
+            </>
           )}
         </div>
 

@@ -4,6 +4,7 @@ import clsx from 'clsx';
 export interface SelectOption {
   value: string | number;
   label: string;
+  disabled?: boolean;
 }
 
 export interface SelectProps extends Omit<SelectHTMLAttributes<HTMLSelectElement>, 'onChange'> {
@@ -104,7 +105,7 @@ export const Select = forwardRef<HTMLSelectElement, SelectProps>(
           {...props}
         >
           {options.map((option) => (
-            <option key={option.value} value={option.value}>
+            <option key={option.value} value={option.value} disabled={option.disabled}>
               {option.label}
             </option>
           ))}
@@ -171,16 +172,20 @@ export const Select = forwardRef<HTMLSelectElement, SelectProps>(
               ) : (
                 filteredOptions.map(option => {
                   const isSelected = selectedValue === option.value;
+                  const isDisabled = option.disabled || disabled;
                   return (
                     <div
                       key={option.value}
-                      onClick={() => handleSelect(option.value)}
+                      onClick={() => {
+                        if (!isDisabled) handleSelect(option.value);
+                      }}
                       className={clsx(
                         'px-3 py-2 cursor-pointer font-mono text-sm',
                         'hover:bg-terminal-primary hover:text-black transition-colors',
                         {
                           'bg-terminal-dim text-black': isSelected,
-                          'text-terminal-primary': !isSelected,
+                          'text-terminal-primary': !isSelected && !isDisabled,
+                          'text-terminal-dim cursor-not-allowed opacity-60': isDisabled,
                         }
                       )}
                     >
