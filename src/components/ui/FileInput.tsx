@@ -2,11 +2,12 @@ import { InputHTMLAttributes, useRef } from 'react';
 import clsx from 'clsx';
 import { Button } from './Button';
 
-export interface FileInputProps extends Omit<InputHTMLAttributes<HTMLInputElement>, 'type'> {
+export interface FileInputProps extends Omit<InputHTMLAttributes<HTMLInputElement>, 'type' | 'size'> {
   label?: string;
   error?: string;
   buttonText?: string;
   showFilename?: boolean;
+  size?: 'sm' | 'md' | 'lg';
 }
 
 /**
@@ -19,6 +20,7 @@ export function FileInput({
   error,
   buttonText = 'Choose File',
   showFilename = true,
+  size,
   onChange,
   ...props
 }: FileInputProps) {
@@ -26,7 +28,7 @@ export function FileInput({
   const selectedFile = inputRef.current?.files?.[0];
 
   return (
-    <div className={clsx('w-full', className)}>
+    <div className={clsx(label && 'w-full', className)}>
       {label && (
         <label className="block text-terminal-secondary text-sm mb-1 font-mono uppercase tracking-wide">
           {label}
@@ -48,6 +50,7 @@ export function FileInput({
           type="button"
           onClick={() => inputRef.current?.click()}
           variant="primary"
+          size={size}
           disabled={props.disabled}
         >
           {buttonText}

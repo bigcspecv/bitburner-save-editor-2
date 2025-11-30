@@ -48,19 +48,44 @@ export function EditorShell({ onShowDemo }: EditorShellProps) {
     });
   };
 
+  const headerActions = isLoaded && hasChanges ? (
+    <>
+      <Button
+        size="sm"
+        variant="secondary"
+        onClick={resetToOriginal}
+        disabled={isLoading}
+      >
+        Revert to Original
+      </Button>
+      <Button
+        size="sm"
+        onClick={handleDownload}
+        disabled={!currentSave || isLoading}
+      >
+        Download Modified Save
+      </Button>
+    </>
+  ) : null;
+
+  const subtitleContent = isLoaded ? (
+    <span className="inline-flex items-center gap-3 flex-wrap">
+      <span className="whitespace-nowrap"><span className="text-terminal-primary">Editing:</span> {lastFileName ?? 'save file'}</span>
+      <FileInput
+        accept=".json,.gz"
+        buttonText="Load Different File"
+        onChange={handleFileChange}
+        showFilename={false}
+        disabled={isLoading}
+        size="sm"
+      />
+    </span>
+  ) : '[UNAUTHORIZED ACCESS GRANTED]';
+
   return (
     <AppLayout
-      subtitle="[UNAUTHORIZED ACCESS GRANTED]"
-      action={
-        <Button
-          size="sm"
-          variant="secondary"
-          onClick={onShowDemo}
-          className="hidden-demo-btn"
-        >
-          View Component Demo
-        </Button>
-      }
+      subtitle={subtitleContent}
+      action={headerActions}
     >
       {!isLoaded ? (
         <Card title="Upload Save File" className="max-w-2xl mx-auto">
@@ -82,55 +107,10 @@ export function EditorShell({ onShowDemo }: EditorShellProps) {
         </Card>
       ) : (
         <>
-          <Card title="Save Loaded">
-            <p className="text-terminal-dim mb-4">
-              Loaded{' '}
-              <span className="text-terminal-secondary">
-                {lastFileName ?? 'save file'}
-              </span>
-              {saveFormat ? ` (${saveFormat})` : ''}. Original snapshot is preserved for full reverts.
-            </p>
-
-            <div className="flex flex-wrap items-center gap-3 mb-3">
-              <Button
-                variant="secondary"
-                onClick={resetToOriginal}
-                disabled={!hasChanges || isLoading}
-              >
-                Revert to Original
-              </Button>
-              {hasChanges ? (
-                <Button
-                  onClick={handleDownload}
-                  disabled={!currentSave || isLoading}
-                >
-                  Download Modified Save
-                </Button>
-              ) : null}
-              <FileInput
-                accept=".json,.gz"
-                buttonText="Load Different File"
-                onChange={handleFileChange}
-                showFilename={false}
-                disabled={isLoading}
-              />
-            </div>
-
-            <p className="text-terminal-dim text-sm">
-              {hasChanges ? (
-                <span className="text-terminal-secondary">
-                  Changes detected in the editable copy. Use "Revert to Original" to discard them.
-                </span>
-              ) : (
-                'Current data matches the original save.'
-              )}
-            </p>
-            {status === 'error' && error && (
-              <p className="text-red-500 mt-3 text-sm font-mono">&gt; {error}</p>
-            )}
-          </Card>
-
-          <GameSectionTabs className="mt-6" />
+          {status === 'error' && error && (
+            <p className="text-red-500 mb-4 text-sm font-mono">&gt; {error}</p>
+          )}
+          <GameSectionTabs />
         </>
       )}
     </AppLayout>

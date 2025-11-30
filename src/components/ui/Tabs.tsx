@@ -5,6 +5,7 @@ export interface Tab {
   id: string;
   label: string;
   content: ReactNode;
+  hasChanges?: boolean;
 }
 
 export interface TabsProps {
@@ -41,6 +42,9 @@ export function Tabs({ tabs, defaultTab, className }: TabsProps) {
             )}
           >
             &gt; {tab.label}
+            {tab.hasChanges && (
+              <span className="ml-2 text-terminal-primary">•</span>
+            )}
           </button>
         ))}
       </div>
@@ -89,6 +93,9 @@ export function ControlledTabs({
             )}
           >
             &gt; {tab.label}
+            {tab.hasChanges && (
+              <span className="ml-2 text-terminal-primary">•</span>
+            )}
           </button>
         ))}
       </div>

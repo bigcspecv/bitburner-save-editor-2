@@ -1,7 +1,7 @@
 import { ReactNode } from 'react';
 
 interface AppLayoutProps {
-  subtitle?: string;
+  subtitle?: ReactNode;
   action?: ReactNode;
   children: ReactNode;
 }
@@ -15,12 +15,16 @@ export function AppLayout({ subtitle, action, children }: AppLayoutProps) {
   return (
     <div className="min-h-screen bg-black text-terminal-primary font-mono crt-scanlines">
       <div className="container mx-auto px-4 py-8">
-        <header className="mb-8">
-          <h1 className="text-4xl font-bold text-glow mb-2">
-            &gt; BITBURNER SAVE EDITOR v2.0
-          </h1>
-          {subtitle && <p className="text-terminal-dim">{subtitle}</p>}
-          {action ? <div className="mt-4">{action}</div> : null}
+        <header className="mb-6">
+          <div className="flex flex-wrap items-center justify-between gap-4">
+            <div>
+              <h1 className="text-4xl font-bold text-glow">
+                &gt; BITBURNER SAVE EDITOR v2.0
+              </h1>
+              {subtitle && <p className="text-terminal-dim mt-1">{subtitle}</p>}
+            </div>
+            {action ? <div className="flex flex-wrap items-center gap-3">{action}</div> : null}
+          </div>
         </header>
 
         {children}
