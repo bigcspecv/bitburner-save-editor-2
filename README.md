@@ -139,10 +139,10 @@ The editor is organized by **gameplay concepts**, not save file structure:
   - [x] Membership editor
   - [x] Reputation & favor
   - [x] Invitation manager
-- [ ] Companies section
-  - [ ] Company reputation & favor
-  - [ ] Jobs manager
-  - [ ] Company-job validation
+- [x] Companies section
+  - [x] Company reputation & favor
+  - [x] Jobs manager
+  - [x] Company-job validation
 
 ### Medium Priority
 

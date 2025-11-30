@@ -37,12 +37,20 @@ interface SaveStoreState {
   resetPlayerStats: () => void;
   resetPlayerResources: () => void;
   resetPlayer: () => void;
+  updateCompanyStats: (
+    name: string,
+    updates: Partial<Pick<ParsedSaveData['CompaniesSave'][string], 'playerReputation' | 'favor'>>
+  ) => void;
+  setCurrentJob: (companyName: string, jobTitle: string | null) => void;
+  resetCompany: (name: string) => void;
+  resetCompanies: () => void;
   hasChanges: () => boolean;
   hasPlayerStatChanges: () => boolean;
   hasPlayerResourceChanges: () => boolean;
   hasAugmentationChanges: () => boolean;
   hasOtherAugmentationChanges: () => boolean;
   hasFactionChanges: () => boolean;
+  hasCompanyChanges: () => boolean;
   clearError: () => void;
 }
 
@@ -452,6 +460,72 @@ export const useSaveStore = create<SaveStoreState>((set, get) => ({
       money: save.PlayerSave.data.money,
       karma: save.PlayerSave.data.karma,
       entropy: save.PlayerSave.data.entropy,
+    });
+
+    return JSON.stringify(snapshot(originalSave)) !== JSON.stringify(snapshot(currentSave));
+  },
+
+  updateCompanyStats(name, updates) {
+    get().mutateCurrentSave((draft) => {
+      const existing = draft.CompaniesSave[name] ?? { playerReputation: 0, favor: 0 };
+      draft.CompaniesSave[name] = { ...existing, ...updates };
+    });
+  },
+
+  setCurrentJob(companyName, jobTitle) {
+    get().mutateCurrentSave((draft) => {
+      if (jobTitle === null) {
+        // Remove job
+        delete draft.PlayerSave.data.jobs[companyName];
+      } else {
+        // Set or update job
+        draft.PlayerSave.data.jobs[companyName] = jobTitle;
+      }
+    });
+  },
+
+  resetCompany(name) {
+    const { originalSave, currentSave } = get();
+    if (!originalSave || !currentSave) return;
+
+    const draft = cloneSave(currentSave);
+
+    // Reset company reputation/favor
+    if (Object.prototype.hasOwnProperty.call(originalSave.CompaniesSave, name)) {
+      draft.CompaniesSave[name] = cloneSave(originalSave.CompaniesSave[name]);
+    } else {
+      delete draft.CompaniesSave[name];
+    }
+
+    // Reset job for this company
+    const originalJob = originalSave.PlayerSave.data.jobs[name];
+    if (originalJob) {
+      draft.PlayerSave.data.jobs[name] = originalJob;
+    } else {
+      delete draft.PlayerSave.data.jobs[name];
+    }
+
+    set({ currentSave: draft });
+  },
+
+  resetCompanies() {
+    const { originalSave, currentSave } = get();
+    if (!originalSave || !currentSave) return;
+
+    const draft = cloneSave(currentSave);
+    draft.CompaniesSave = cloneSave(originalSave.CompaniesSave);
+    draft.PlayerSave.data.jobs = cloneSave(originalSave.PlayerSave.data.jobs);
+
+    set({ currentSave: draft });
+  },
+
+  hasCompanyChanges() {
+    const { originalSave, currentSave } = get();
+    if (!originalSave || !currentSave) return false;
+
+    const snapshot = (save: ParsedSaveData) => ({
+      companies: save.CompaniesSave,
+      jobs: save.PlayerSave.data.jobs,
     });
 
     return JSON.stringify(snapshot(originalSave)) !== JSON.stringify(snapshot(currentSave));
