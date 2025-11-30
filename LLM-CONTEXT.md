@@ -797,6 +797,35 @@ if (!result.success) {
 
 ---
 
+## Faction Metadata
+
+Faction metadata (enemies and work types) is stored in `src/models/faction-data.ts`, extracted from Bitburner source code.
+
+### Enemy Factions
+
+Some city factions have enemy relationships. Joining one prevents joining its enemies:
+- **Aevum** ↔ Chongqing, New Tokyo, Ishima, Volhaven
+- **Chongqing** ↔ Sector-12, Aevum, Volhaven
+- **Ishima** ↔ Sector-12, Aevum, Volhaven
+- **New Tokyo** ↔ Sector-12, Aevum, Volhaven
+- **Sector-12** ↔ Chongqing, New Tokyo, Ishima, Volhaven
+- **Volhaven** ↔ All other city factions
+
+The UI displays a red octagon icon with black exclamation point next to factions with enemies. Hovering shows a tooltip listing enemy factions.
+
+### Work Types
+
+Factions offer different types of work to earn reputation:
+- **Hacking Work** - Programming/hacking tasks (green ">|" icon)
+- **Field Work** - Physical/intelligence work (blue compass icon)
+- **Security Work** - Combat/security tasks (white shield with star icon)
+
+Special factions (Bladeburners, Church of the Machine God, Shadows of Anarchy) don't offer standard work - they have unique reputation mechanics.
+
+The `getFactionMetadata(factionName)` helper returns work types and enemies for any faction. Icons are displayed in faction cards via the `<FactionIcons>` component with tooltips explaining each work type.
+
+---
+
 ## Document Maintenance Log
 
 *Track significant updates to this context document here.*
@@ -804,6 +833,7 @@ if (!result.success) {
 - **2025-11-29** - Augmentation data updated with complete list from Bitburner v2.6.2 source (123 augmentations total). Corrected naming: SoA augmentations now use "SoA - " prefix (e.g., "SoA - Beauty of Aphrodite"); "EsperTech Bladeburner Eyewear" (not "Esper Eyewear"); "GOLEM Serum" (not "Golem Serum"); "I.N.T.E.R.L.I.N.K.E.D" (with periods). Includes all 9 Shadows of Anarchy augmentations, all 17 Bladeburner augmentations, all 3 Stanek's Gift augmentations, and NeuroFlux Governor with complete multiplier data.
 - **2025-11-29** - Companies section implemented with reputation/favor editors and job management. Store exposes `updateCompanyStats`, `setCurrentJob`, `resetCompany`, `resetCompanies`, and `hasCompanyChanges`. Company data (ALL_COMPANIES, COMPANY_JOBS, COMPANY_CITY_MAP) stored in `src/models/company-data.ts`. UI includes search, city filter, and status filters (employed/has reputation/modified). Job dropdown validates against available positions per company.
 - **2025-11-29** - Factions section filters now include a corporate-only toggle and a city dropdown; company/city metadata is defined in `src/components/sections/FactionsSection.tsx` (`companyFactions` and `factionCityMap`, derived from Bitburner `FactionInfo`) for filter logic.
+- **2025-11-29** - Added faction metadata system with enemy factions and work type indicators. `src/models/faction-data.ts` contains metadata extracted from Bitburner FactionInfo (enemies, offerHackingWork, offerFieldWork, offerSecurityWork). New UI components: `Tooltip` (terminal-styled hover tooltips), `FactionIcons` (work type and enemy faction indicators), `HackingWorkIcon` (green ">|"), `SecurityWorkIcon` (white shield with star), `FieldWorkIcon` (blue compass), `EnemyFactionIcon` (red octagon with exclamation). Icons display in faction cards with hover tooltips explaining work types and listing enemy factions.
 - **2025-12-03** - Factions section bulk actions now mirror Augmentations: cards have selection checkboxes; bulk bar uses tri-state toggles for member/invited/banned; bulk set favor/reputation now uses a modal; discovery bulk buttons removed.
 - **2025-12-03** - `Checkbox` UI component supports tri-state (`triState` + `state`/`onStateChange`) with an indeterminate glyph; used for faction bulk toggles.
 

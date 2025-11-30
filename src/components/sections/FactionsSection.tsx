@@ -1,7 +1,8 @@
 import { useCallback, useMemo, useState } from 'react';
-import { Card, Input, NumberInput, Checkbox, Button, Select, ResetAction, Modal } from '../ui';
+import { Card, Input, NumberInput, Checkbox, Button, Select, ResetAction, Modal, FactionIcons } from '../ui';
 import { useSaveStore } from '../../store/save-store';
 import type { FactionDiscovery } from '../../models/types';
+import { getFactionMetadata } from '../../models/faction-data';
 
 const discoveryOptions = [
   { value: 'known', label: 'Known' },
@@ -528,6 +529,7 @@ export function FactionsSection() {
               const discovery = faction.discovery ?? 'unknown';
               const isBanned = faction.isBanned ?? false;
               const isSelected = selectedFactions.has(name);
+              const metadata = getFactionMetadata(name);
 
               return (
                 <div
@@ -540,9 +542,12 @@ export function FactionsSection() {
                     <div className="flex items-start gap-2">
                       <Checkbox checked={isSelected} onChange={() => handleToggleSelect(name)} />
                       <div>
-                        <h3 className="text-terminal-secondary uppercase tracking-wide text-lg">
-                          {name}
-                        </h3>
+                        <div className="flex items-center gap-2">
+                          <h3 className="text-terminal-secondary uppercase tracking-wide text-lg">
+                            {name}
+                          </h3>
+                          <FactionIcons factionName={name} metadata={metadata} />
+                        </div>
                         <p className="text-terminal-dim text-xs">
                           Discovery: {discovery}
                         </p>

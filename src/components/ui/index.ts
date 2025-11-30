@@ -44,3 +44,15 @@ export type { MultiSelectProps, MultiSelectOption } from './MultiSelect';
 
 export { ResetAction } from './ResetAction';
 export type { ResetActionProps } from './ResetAction';
+
+export { Tooltip } from './Tooltip';
+export type { TooltipProps } from './Tooltip';
+
+export {
+  SecurityWorkIcon,
+  HackingWorkIcon,
+  FieldWorkIcon,
+  EnemyFactionIcon,
+  FactionIcons,
+} from './FactionIcons';
+export type { EnemyFactionIconProps, FactionIconsProps } from './FactionIcons';
