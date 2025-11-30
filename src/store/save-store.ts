@@ -44,6 +44,17 @@ interface SaveStoreState {
   setCurrentJob: (companyName: string, jobTitle: string | null) => void;
   resetCompany: (name: string) => void;
   resetCompanies: () => void;
+  updateServerStats: (
+    hostname: string,
+    updates: Partial<Pick<ParsedSaveData['AllServersSave'][string]['data'],
+      'maxRam' | 'cpuCores' | 'moneyAvailable' | 'moneyMax' | 'hackDifficulty' | 'minDifficulty' | 'baseDifficulty' |
+      'serverGrowth' | 'requiredHackingSkill' | 'numOpenPortsRequired' | 'backdoorInstalled' |
+      'hasAdminRights' | 'ftpPortOpen' | 'httpPortOpen' | 'smtpPortOpen' | 'sqlPortOpen' | 'sshPortOpen'>>
+  ) => void;
+  resetServer: (hostname: string) => void;
+  resetAllServers: () => void;
+  addPurchasedServer: (hostname: string, ram: number, cores: number) => void;
+  removePurchasedServer: (hostname: string) => void;
   hasChanges: () => boolean;
   hasPlayerStatChanges: () => boolean;
   hasPlayerResourceChanges: () => boolean;
@@ -51,6 +62,7 @@ interface SaveStoreState {
   hasOtherAugmentationChanges: () => boolean;
   hasFactionChanges: () => boolean;
   hasCompanyChanges: () => boolean;
+  hasServerChanges: () => boolean;
   clearError: () => void;
 }
 
@@ -529,6 +541,174 @@ export const useSaveStore = create<SaveStoreState>((set, get) => ({
     });
 
     return JSON.stringify(snapshot(originalSave)) !== JSON.stringify(snapshot(currentSave));
+  },
+
+  updateServerStats(hostname, updates) {
+    get().mutateCurrentSave((draft) => {
+      const server = draft.AllServersSave[hostname];
+      if (server) {
+        server.data = { ...server.data, ...updates };
+      }
+    });
+  },
+
+  resetServer(hostname) {
+    const { originalSave, currentSave } = get();
+    if (!originalSave || !currentSave) return;
+
+    const draft = cloneSave(currentSave);
+
+    // Reset server data
+    if (Object.prototype.hasOwnProperty.call(originalSave.AllServersSave, hostname)) {
+      draft.AllServersSave[hostname] = cloneSave(originalSave.AllServersSave[hostname]);
+    }
+
+    // Also restore cross-reference in purchased servers list if applicable
+    const wasPurchased = originalSave.PlayerSave.data.purchasedServers?.includes(hostname) ?? false;
+    const isPurchased = draft.PlayerSave.data.purchasedServers?.includes(hostname) ?? false;
+
+    if (wasPurchased && !isPurchased) {
+      // Re-add at original index
+      const originalIndex = originalSave.PlayerSave.data.purchasedServers.indexOf(hostname);
+      draft.PlayerSave.data.purchasedServers = insertAtIndex(
+        draft.PlayerSave.data.purchasedServers,
+        hostname,
+        originalIndex
+      );
+    } else if (!wasPurchased && isPurchased) {
+      // Remove
+      draft.PlayerSave.data.purchasedServers = draft.PlayerSave.data.purchasedServers.filter(
+        (h) => h !== hostname
+      );
+    }
+
+    set({ currentSave: draft });
+  },
+
+  resetAllServers() {
+    const { originalSave, currentSave } = get();
+    if (!originalSave || !currentSave) return;
+
+    const draft = cloneSave(currentSave);
+    draft.AllServersSave = cloneSave(originalSave.AllServersSave);
+    draft.PlayerSave.data.purchasedServers = cloneSave(originalSave.PlayerSave.data.purchasedServers);
+
+    set({ currentSave: draft });
+  },
+
+  hasServerChanges() {
+    const { originalSave, currentSave } = get();
+    if (!originalSave || !currentSave) return false;
+
+    const snapshot = (save: ParsedSaveData) => ({
+      servers: save.AllServersSave,
+      purchasedServers: save.PlayerSave.data.purchasedServers,
+    });
+
+    return JSON.stringify(snapshot(originalSave)) !== JSON.stringify(snapshot(currentSave));
+  },
+
+  addPurchasedServer(hostname, ram, cores) {
+    get().mutateCurrentSave((draft) => {
+      // Generate a unique random IP address using Bitburner's algorithm
+      // Source: .bitburner-src-dev/src/utils/IPAddress.ts
+      const existingIPs = Object.values(draft.AllServersSave).map((s) => s.data.ip);
+      let newIP = '';
+      let attempts = 0;
+      const maxAttempts = 1000;
+
+      // Keep generating random IPs until we find a unique one
+      while (attempts < maxAttempts) {
+        // Credit goes to yichizhng on BitBurner discord
+        // Generates a number like 0.c8f0a07f1d47e8
+        const ip = Math.random().toString(16);
+        // uses regex to match every 2 characters. [0.][c8][f0][a0][7f][1d][47][e8]
+        // we only want #1 through #4
+        const matchResult = ip.match(/../g);
+        if (!matchResult) {
+          attempts++;
+          continue;
+        }
+        const sliced = matchResult.slice(1, 5);
+        // convert each to a decimal number and join them together to make a human readable IP address.
+        const testIP = sliced.map((x) => parseInt(x, 16)).join('.');
+
+        if (!existingIPs.includes(testIP)) {
+          newIP = testIP;
+          break;
+        }
+        attempts++;
+      }
+
+      // Fallback - this should rarely/never happen
+      if (!newIP) {
+        newIP = `${Math.floor(Math.random() * 256)}.${Math.floor(Math.random() * 256)}.${Math.floor(Math.random() * 256)}.${Math.floor(Math.random() * 256)}`;
+      }
+
+      // Create the new server
+      const newServer = {
+        ctor: 'Server' as const,
+        data: {
+          hostname,
+          ip: newIP,
+          organizationName: '',
+          isConnectedTo: false,
+          hasAdminRights: true,
+          maxRam: ram,
+          ftpPortOpen: true,
+          httpPortOpen: true,
+          smtpPortOpen: true,
+          sqlPortOpen: true,
+          sshPortOpen: true,
+          cpuCores: cores,
+          scripts: {
+            ctor: 'JSONMap' as const,
+            data: [] as [string, { ctor: string; data: { filename: string; code: string; server: string } }][],
+          },
+          messages: [],
+          programs: [],
+          contracts: [],
+          purchasedByPlayer: true,
+          serversOnNetwork: ['home'], // Connect to home computer
+        },
+      };
+
+      // Add to AllServersSave
+      draft.AllServersSave[hostname] = newServer;
+
+      // Add to purchasedServers list
+      if (!draft.PlayerSave.data.purchasedServers.includes(hostname)) {
+        draft.PlayerSave.data.purchasedServers.push(hostname);
+      }
+
+      // Add this server to home's network
+      const homeServer = draft.AllServersSave['home'];
+      if (homeServer && homeServer.data.serversOnNetwork) {
+        if (!homeServer.data.serversOnNetwork.includes(hostname)) {
+          homeServer.data.serversOnNetwork.push(hostname);
+        }
+      }
+    });
+  },
+
+  removePurchasedServer(hostname) {
+    get().mutateCurrentSave((draft) => {
+      // Remove from AllServersSave
+      delete draft.AllServersSave[hostname];
+
+      // Remove from purchasedServers list
+      draft.PlayerSave.data.purchasedServers = draft.PlayerSave.data.purchasedServers.filter(
+        (h) => h !== hostname
+      );
+
+      // Remove from home's network
+      const homeServer = draft.AllServersSave['home'];
+      if (homeServer && homeServer.data.serversOnNetwork) {
+        homeServer.data.serversOnNetwork = homeServer.data.serversOnNetwork.filter(
+          (h) => h !== hostname
+        );
+      }
+    });
   },
 
   hasChanges() {

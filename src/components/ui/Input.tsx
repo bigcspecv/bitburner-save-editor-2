@@ -4,12 +4,14 @@ import {
   MutableRefObject,
   forwardRef,
   useRef,
+  useState,
 } from 'react';
 import clsx from 'clsx';
 
 export interface InputProps extends InputHTMLAttributes<HTMLInputElement> {
   label?: string;
   error?: string;
+  clearOnFocus?: boolean;
 }
 
 /**
@@ -17,8 +19,9 @@ export interface InputProps extends InputHTMLAttributes<HTMLInputElement> {
  * Supports labels and error states
  */
 export const Input = forwardRef<HTMLInputElement, InputProps>(
-  ({ className, label, error, type = 'text', onKeyDown, ...props }, ref) => {
+  ({ className, label, error, type = 'text', onKeyDown, clearOnFocus, onFocus, ...props }, ref) => {
     const inputRef = useRef<HTMLInputElement>(null);
+    const [hasBeenFocused, setHasBeenFocused] = useState(false);
 
     const handleKeyDown = (e: KeyboardEvent<HTMLInputElement>) => {
       onKeyDown?.(e);
@@ -27,6 +30,24 @@ export const Input = forwardRef<HTMLInputElement, InputProps>(
         e.preventDefault();
         inputRef.current?.blur();
       }
+    };
+
+    const handleFocus = (e: React.FocusEvent<HTMLInputElement>) => {
+      if (clearOnFocus && !hasBeenFocused) {
+        // Clear the input value
+        e.target.value = '';
+        setHasBeenFocused(true);
+        // Trigger onChange to update parent state
+        if (props.onChange) {
+          const syntheticEvent = {
+            ...e,
+            target: e.target,
+            currentTarget: e.currentTarget,
+          } as React.ChangeEvent<HTMLInputElement>;
+          props.onChange(syntheticEvent);
+        }
+      }
+      onFocus?.(e);
     };
 
     const assignRef = (node: HTMLInputElement | null) => {
@@ -50,6 +71,7 @@ export const Input = forwardRef<HTMLInputElement, InputProps>(
           ref={assignRef}
           type={type}
           onKeyDown={handleKeyDown}
+          onFocus={handleFocus}
           className={clsx(
             'w-full bg-black border text-terminal-primary px-3 py-2',
             'focus:outline-none focus:ring-1 font-mono',

@@ -14,13 +14,14 @@ export interface SelectProps extends Omit<SelectHTMLAttributes<HTMLSelectElement
   value?: string | number;
   onChange?: (value: string | number) => void;
   placeholder?: string;
+  showSearch?: boolean;
 }
 
 /**
  * Terminal-styled select/dropdown component with search functionality
  */
 export const Select = forwardRef<HTMLSelectElement, SelectProps>(
-  ({ className, label, error, options, value, onChange, placeholder = 'Select...', disabled, ...props }, ref) => {
+  ({ className, label, error, options, value, onChange, placeholder = 'Select...', showSearch = true, disabled, ...props }, ref) => {
     const [isOpen, setIsOpen] = useState(false);
     const [searchTerm, setSearchTerm] = useState('');
     const [selectedValue, setSelectedValue] = useState<string | number | undefined>(value);
@@ -152,16 +153,18 @@ export const Select = forwardRef<HTMLSelectElement, SelectProps>(
             }}
           >
             {/* Search input */}
-            <div className="p-2 border-b border-terminal-primary">
-              <input
-                type="text"
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                placeholder="Search..."
-                autoFocus
-                className="w-full bg-black border border-terminal-primary text-terminal-primary px-3 py-2 font-mono text-sm focus:outline-none focus:border-terminal-secondary placeholder-terminal-dim"
-              />
-            </div>
+            {showSearch && (
+              <div className="p-2 border-b border-terminal-primary">
+                <input
+                  type="text"
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  placeholder="Search..."
+                  autoFocus
+                  className="w-full bg-black border border-terminal-primary text-terminal-primary px-3 py-2 font-mono text-sm focus:outline-none focus:border-terminal-secondary placeholder-terminal-dim"
+                />
+              </div>
+            )}
 
             {/* Options list */}
             <div className="max-h-60 overflow-y-auto">

@@ -34,6 +34,7 @@ export const ServerDataSchema = z.object({
   sshPortOpen: z.boolean().optional(),
 
   // Security
+  baseDifficulty: z.number().optional(),
   hackDifficulty: z.number().optional(),
   minDifficulty: z.number().optional(),
   serverGrowth: z.number().optional(),
@@ -57,6 +58,12 @@ export const ServerDataSchema = z.object({
   messages: z.array(z.string()),
   programs: z.array(z.string()),
   contracts: z.array(z.unknown()), // TODO: Add contract schema
+  textFiles: createJSONMapSchema(z.string(), z.unknown()).optional(),
+
+  // Runtime state
+  runningScripts: z.array(z.unknown()).optional(),
+  serversOnNetwork: z.array(z.string()).optional(),
+  openPortCount: z.number().optional(),
 
   // Purchased server
   purchasedByPlayer: z.boolean().optional(),

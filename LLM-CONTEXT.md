@@ -134,6 +134,13 @@ src/
 
 The UI is organized by **gameplay concepts**, not save file structure:
 
+### Servers Section (implemented)
+- Component lives at `src/components/sections/ServersSection.tsx` and contains the `ServerCard` inline; uses `Card`, `Input`, `Checkbox`, `NumberInput`, and `ResetAction` from `components/ui`.
+- Filters: text search across hostname/org/IP, purchased-only (uses `PlayerSave.data.purchasedServers`), modified-only (JSON.stringify compare against `originalSave.AllServersSave[hostname]`), and hackable-only (moneyMax defined). Sorted with purchased servers first, then hostname.
+- Cards show RAM/cores, money and security stats when present, port counts, root/backdoor/connected badges, and file counts (scripts/programs/messages read-only). Expand toggle reveals editors for RAM, money, security fields, admin/backdoor flags, and individual port booleans; ports required is editable.
+- Reset wiring: header reset button appears only when a server differs from original; section-level reset uses `ResetAction` bound to `resetAllServers` and `hasServerChanges`.
+- Store interaction: edits call `updateServerStats` (shallow merge of `server.data`), per-card reset calls `resetServer` (restores server entry and re-syncs purchasedServers ordering to original), change detection uses `hasServerChanges`.
+
 ### Primary Sections
 
 1. **Player** - Character identity & attributes
@@ -873,6 +880,7 @@ Faction cards display:
 - **2025-11-29** - Augmentations section now includes bulk selection/actions UI: checkboxes on cards (using `Checkbox` component), "Select All Filtered" button, and bulk status change buttons (Set Installed/Queued/None). Filters reorganized into compact single-box layout with search, status, and effect filters side-by-side (2-column grid on large screens). Clear All button positioned in upper-right of filter box.
 - **2025-11-29** - Augmentations section fully reimplemented with proper NeuroFlux Governor handling. CRITICAL: NeuroFlux has asymmetric storage - **installed** is a SINGLE entry with max level, **queued** is MULTIPLE entries (one per level from installed+1 to queued). Regular augmentations use status dropdown (none/queued/installed). Store uses `mutateCurrentSave` for direct array manipulation rather than individual add/remove/update methods. Separate NeuroFlux card with dual inputs; regular augs show only current save augs (no static list).
 - **2025-12-02** - HP computation now takes the greater of saved defense level and recomputed level from EXP/mults to better mirror in-game HP when save multipliers are stale; UI labels HP as in-game vs raw values.
+- **2025-12-04** - Servers section implemented with search/filters and editable cards. Store exposes `updateServerStats`, `resetServer` (also restores purchasedServers membership to the original ordering), `resetAllServers`, and `hasServerChanges`. UI badges purchased/modified status, hides money/security editors when the fields are undefined, and uses JSON.stringify comparison to detect per-server modifications.
 
 - **2025-12-01** - Player section reset button renamed to "Reset Stats & Skills" and now calls `resetPlayerStats` in the store, which only restores hp/skills/exp/mults from the original save (money/resources and other player fields remain unchanged).
 - **2025-12-01** - Player section now hides the stats reset button when there are no stat/skill changes (shows "No Modifications"); uses store helper `hasPlayerStatChanges` that scopes comparison to hp/skills/exp/mults.
