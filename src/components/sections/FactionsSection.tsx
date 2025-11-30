@@ -1,5 +1,5 @@
-import { useMemo, useState } from 'react';
-import { Card, Input, NumberInput, Checkbox, Button, Select, ResetAction } from '../ui';
+import { useCallback, useMemo, useState } from 'react';
+import { Card, Input, NumberInput, Checkbox, Button, Select, ResetAction, Modal } from '../ui';
 import { useSaveStore } from '../../store/save-store';
 import type { FactionDiscovery } from '../../models/types';
 
@@ -39,6 +39,8 @@ export function FactionsSection() {
     changed: false,
     discovery: 'all' as DiscoveryFilter,
   });
+  const [selectedFactions, setSelectedFactions] = useState<Set<string>>(new Set());
+  const [bulkValueModal, setBulkValueModal] = useState<{ type: 'reputation' | 'favor'; value: number } | null>(null);
 
   const factions = useMemo(() => {
     if (!player || !factionsSave) return [];
@@ -90,6 +92,104 @@ export function FactionsSection() {
     });
   }, [factions, search, filters]);
 
+  const handleToggleSelect = useCallback((name: string) => {
+    setSelectedFactions((prev) => {
+      const next = new Set(prev);
+      if (next.has(name)) {
+        next.delete(name);
+      } else {
+        next.add(name);
+      }
+      return next;
+    });
+  }, []);
+
+  const handleSelectAllFiltered = useCallback(() => {
+    setSelectedFactions(new Set(filteredFactions.map((f) => f.name)));
+  }, [filteredFactions]);
+
+  const handleClearSelection = useCallback(() => {
+    setSelectedFactions(new Set());
+  }, []);
+
+  const applyToSelection = useCallback(
+    (action: (name: string) => void) => {
+      selectedFactions.forEach((name) => action(name));
+    },
+    [selectedFactions]
+  );
+
+  const handleBulkMembership = useCallback(
+    (isMember: boolean) => {
+      applyToSelection((name) => setFactionMembership(name, isMember));
+    },
+    [applyToSelection, setFactionMembership]
+  );
+
+  const handleBulkInvitations = useCallback(
+    (invited: boolean) => {
+      applyToSelection((name) => setFactionInvitation(name, invited));
+    },
+    [applyToSelection, setFactionInvitation]
+  );
+
+  const handleBulkBanned = useCallback(
+    (isBanned: boolean) => {
+      applyToSelection((name) => updateFactionStats(name, { isBanned }));
+    },
+    [applyToSelection, updateFactionStats]
+  );
+
+  const handleBulkReset = useCallback(() => {
+    applyToSelection((name) => resetFaction(name));
+  }, [applyToSelection, resetFaction]);
+
+  const hasActiveFilters =
+    search ||
+    filters.members ||
+    filters.invited ||
+    filters.changed ||
+    filters.discovery !== 'all';
+  const selectedCount = selectedFactions.size;
+
+  const selectionSnapshot = useMemo(() => {
+    const selected = factions.filter((f) => selectedFactions.has(f.name));
+    const computeState = (predicate: (faction: (typeof factions)[number]) => boolean) => {
+      if (selected.length === 0) return 'none' as const;
+      const matches = selected.filter(predicate).length;
+      if (matches === 0) return 'unchecked' as const;
+      if (matches === selected.length) return 'checked' as const;
+      return 'indeterminate' as const;
+    };
+
+    return {
+      member: computeState((f) => f.isMember),
+      invited: computeState((f) => f.isInvited),
+      banned: computeState((f) => f.faction.isBanned ?? false),
+    };
+  }, [factions, selectedFactions]);
+
+  const handleOpenBulkValueModal = useCallback(
+    (type: 'reputation' | 'favor') => {
+      if (selectedCount === 0) return;
+      setBulkValueModal({ type, value: 0 });
+    },
+    [selectedCount]
+  );
+
+  const handleConfirmBulkValue = useCallback(() => {
+    if (!bulkValueModal) return;
+    const { type, value } = bulkValueModal;
+
+    const updates =
+      type === 'reputation'
+        ? (name: string) => updateFactionStats(name, { playerReputation: value })
+        : (name: string) => updateFactionStats(name, { favor: value });
+
+    applyToSelection(updates);
+    setBulkValueModal(null);
+  }, [applyToSelection, bulkValueModal, updateFactionStats]);
+
   if (!player || !factionsSave) {
     return (
       <Card title="Factions" subtitle="Load a save file to edit factions">
@@ -101,7 +201,8 @@ export function FactionsSection() {
   }
 
   return (
-    <div className="space-y-4">
+    <>
+      <div className="space-y-4">
       <Card
         title="Factions"
         subtitle="Membership, invitations, reputation, and favor"
@@ -168,7 +269,7 @@ export function FactionsSection() {
                 placeholder="Search by faction name..."
               />
             </div>
-            {(search || filters.members || filters.invited || filters.changed || filters.discovery !== 'all') && (
+            {hasActiveFilters && (
               <Button
                 variant="secondary"
                 size="sm"
@@ -226,11 +327,103 @@ export function FactionsSection() {
           </div>
         </div>
 
+        <div className="mt-4 border border-terminal-primary/30 p-3">
+          <div className="flex items-start justify-between gap-3 mb-3">
+            <h4 className="text-terminal-secondary text-sm uppercase">
+              Select & Bulk Actions ({selectedCount} selected)
+            </h4>
+            {selectedCount > 0 && (
+              <Button variant="secondary" size="sm" onClick={handleClearSelection}>
+                Clear Selection
+              </Button>
+            )}
+          </div>
+
+          <div className="grid grid-cols-1 xl:grid-cols-2 gap-3">
+            <div className="space-y-2">
+              <p className="text-terminal-dim text-xs uppercase font-mono">Selection</p>
+              <div className="flex flex-wrap gap-2">
+                <Button
+                  variant="secondary"
+                  size="sm"
+                  onClick={handleSelectAllFiltered}
+                  disabled={filteredFactions.length === 0}
+                >
+                  Select All Filtered ({filteredFactions.length})
+                </Button>
+                <Button
+                  variant="secondary"
+                  size="sm"
+                  onClick={handleClearSelection}
+                  disabled={selectedCount === 0}
+                >
+                  Clear Selection
+                </Button>
+              </div>
+              <p className="text-terminal-dim text-xs">
+                Choose factions using the checkboxes on each card to apply bulk changes.
+              </p>
+            </div>
+
+            <div className="space-y-2">
+              <p className="text-terminal-dim text-xs uppercase font-mono">Bulk Actions</p>
+              <div className="flex flex-wrap gap-3 items-center">
+                {[
+                  { label: 'Member', key: 'member' as const, handler: () => handleBulkMembership(selectionSnapshot.member === 'checked' ? false : true) },
+                  { label: 'Invited', key: 'invited' as const, handler: () => handleBulkInvitations(selectionSnapshot.invited === 'checked' ? false : true) },
+                  { label: 'Banned', key: 'banned' as const, handler: () => handleBulkBanned(selectionSnapshot.banned === 'checked' ? false : true) },
+                ].map(({ label, key, handler }) => {
+                  const stateValue = selectionSnapshot[key];
+                  const triState =
+                    stateValue === 'checked'
+                      ? 'checked'
+                      : stateValue === 'indeterminate'
+                      ? 'indeterminate'
+                      : 'unchecked';
+
+                  return (
+                    <Checkbox
+                      key={label}
+                      triState
+                      state={triState}
+                      onStateChange={handler}
+                      disabled={selectedCount === 0}
+                      label={label}
+                    />
+                  );
+                })}
+                <Button
+                  variant="secondary"
+                  size="sm"
+                  disabled={selectedCount === 0}
+                  onClick={() => handleOpenBulkValueModal('reputation')}
+                >
+                  Set Reputation
+                </Button>
+                <Button
+                  variant="secondary"
+                  size="sm"
+                  disabled={selectedCount === 0}
+                  onClick={() => handleOpenBulkValueModal('favor')}
+                >
+                  Set Favor
+                </Button>
+                <Button
+                  variant="secondary"
+                  size="sm"
+                  onClick={handleBulkReset}
+                  disabled={selectedCount === 0}
+                >
+                  Reset Selected
+                </Button>
+              </div>
+            </div>
+          </div>
+        </div>
+
         {filteredFactions.length === 0 ? (
           <p className="text-terminal-dim text-sm text-center py-8">
-            {search || filters.members || filters.invited || filters.changed || filters.discovery !== 'all'
-              ? 'No factions match your filters'
-              : 'No factions found in this save'}
+            {hasActiveFilters ? 'No factions match your filters' : 'No factions found in this save'}
           </p>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-3 mt-4">
@@ -239,20 +432,26 @@ export function FactionsSection() {
               const reputation = faction.playerReputation ?? 0;
               const discovery = faction.discovery ?? 'unknown';
               const isBanned = faction.isBanned ?? false;
+              const isSelected = selectedFactions.has(name);
 
               return (
                 <div
                   key={name}
-                  className={`border p-3 bg-black ${changed ? 'border-terminal-secondary' : 'border-terminal-primary/40'}`}
+                  className={`border p-3 ${changed ? 'border-terminal-secondary' : 'border-terminal-primary/40'} ${
+                    isSelected ? 'bg-terminal-secondary/10' : 'bg-black'
+                  }`}
                 >
                   <div className="flex items-start justify-between gap-2 mb-2">
-                    <div>
-                      <h3 className="text-terminal-secondary uppercase tracking-wide text-lg">
-                        {name}
-                      </h3>
-                      <p className="text-terminal-dim text-xs">
-                        Discovery: {discovery}
-                      </p>
+                    <div className="flex items-start gap-2">
+                      <Checkbox checked={isSelected} onChange={() => handleToggleSelect(name)} />
+                      <div>
+                        <h3 className="text-terminal-secondary uppercase tracking-wide text-lg">
+                          {name}
+                        </h3>
+                        <p className="text-terminal-dim text-xs">
+                          Discovery: {discovery}
+                        </p>
+                      </div>
                     </div>
                     <div className="flex items-center gap-2">
                       {changed && (
@@ -285,11 +484,11 @@ export function FactionsSection() {
                       min={0}
                       step={1}
                     />
-                  </div>
+                    </div>
 
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                    <Select
-                      label="Discovery"
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                      <Select
+                        label="Discovery"
                       options={discoveryOptions}
                       value={discovery}
                       onChange={(value) => updateFactionStats(name, { discovery: value as FactionDiscovery })}
@@ -323,5 +522,41 @@ export function FactionsSection() {
         )}
       </Card>
     </div>
+      {bulkValueModal && (
+        <Modal
+          isOpen={!!bulkValueModal}
+          onClose={() => setBulkValueModal(null)}
+          title={`Set ${bulkValueModal.type === 'reputation' ? 'Reputation' : 'Favor'}`}
+          footer={
+            <>
+              <Button variant="secondary" onClick={() => setBulkValueModal(null)}>
+                Cancel
+              </Button>
+              <Button
+                variant="primary"
+                onClick={handleConfirmBulkValue}
+                disabled={selectedCount === 0}
+              >
+                Apply to Selected
+              </Button>
+            </>
+          }
+        >
+          <div className="space-y-3">
+            <p className="text-terminal-primary text-sm">
+              Set {bulkValueModal.type === 'reputation' ? 'reputation' : 'favor'} for {selectedCount} selected faction(s).
+            </p>
+            <NumberInput
+              label={bulkValueModal.type === 'reputation' ? 'Reputation Value' : 'Favor Value'}
+              value={bulkValueModal.value}
+              onChange={(value) => setBulkValueModal((prev) => (prev ? { ...prev, value } : prev))}
+              showButtons={true}
+              step={bulkValueModal.type === 'reputation' ? 1000 : 1}
+              min={bulkValueModal.type === 'favor' ? 0 : undefined}
+            />
+          </div>
+        </Modal>
+      )}
+    </>
   );
 }

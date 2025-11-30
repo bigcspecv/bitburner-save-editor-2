@@ -801,6 +801,9 @@ if (!result.success) {
 
 *Track significant updates to this context document here.*
 
+- **2025-12-03** - Factions section bulk actions now mirror Augmentations: cards have selection checkboxes; bulk bar uses tri-state toggles for member/invited/banned; bulk set favor/reputation now uses a modal; discovery bulk buttons removed.
+- **2025-12-03** - `Checkbox` UI component supports tri-state (`triState` + `state`/`onStateChange`) with an indeterminate glyph; used for faction bulk toggles.
+
 - **2025-12-03** - Augmentation prerequisites enforced via UI disabling (install requires installed prereqs; queue requires owned prereqs); automatic cascading/demotion was removed—status changes now only touch the targeted augmentation. Cards still show prereq warnings. Use canonical augmentation names when writing to save; rely on `nameMatchesAugmentation` for alias lookups.
 - **2025-12-02** - Factions section implemented with membership/invite toggles, discovery/banned controls, and rep/favor editors. Store exposes `updateFactionStats`, `setFactionMembership`, `setFactionInvitation`, `resetFaction`, `resetFactions`, and `hasFactionChanges`; faction schema now allows `isMember`. Membership/invitation helpers sync PlayerSave arrays with FactionsSave flags and preserve original ordering on resets.
 - **2025-12-02** - CordiARC aug canonical name corrected to "CordiARC Fusion Reactor"; alias accepts legacy "Cordiax Proprietary ARC Reactor".
