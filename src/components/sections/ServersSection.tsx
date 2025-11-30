@@ -45,12 +45,12 @@ function isPowerOfTwo(n: number): boolean {
 
 interface HomeServerCardProps {
   server: Server;
-  isModified: boolean;
   onUpdate: (hostname: string, updates: Partial<Server['data']>) => void;
-  onReset: (hostname: string) => void;
+  hasChanges: boolean;
+  onReset: () => void;
 }
 
-function HomeServerCard({ server, isModified, onUpdate, onReset }: HomeServerCardProps) {
+function HomeServerCard({ server, onUpdate, hasChanges, onReset }: HomeServerCardProps) {
   const data = server.data;
 
   const handleUpdate = (field: keyof Server['data']) => (value: number | boolean) => {
@@ -62,11 +62,11 @@ function HomeServerCard({ server, isModified, onUpdate, onReset }: HomeServerCar
       title="Home Server"
       subtitle={`Your personal computer`}
       actions={
-        isModified && (
-          <Button variant="secondary" onClick={() => onReset(data.hostname)} className="text-xs px-2 py-1">
-            RESET
-          </Button>
-        )
+        <ResetAction
+          title="Reset Home Server"
+          hasChanges={hasChanges}
+          onReset={onReset}
+        />
       }
     >
       <div className="space-y-4">
@@ -128,19 +128,6 @@ function HomeServerCard({ server, isModified, onUpdate, onReset }: HomeServerCar
           </div>
         </div>
 
-        {/* Status Flags */}
-        <div className="border border-terminal-primary/50 bg-terminal-dim/10 p-3">
-          <h4 className="text-terminal-secondary uppercase text-sm mb-3">Status</h4>
-          <div className="space-y-2">
-            <label className="flex items-center gap-2">
-              <Checkbox checked={data.hasAdminRights} onChange={handleUpdate('hasAdminRights')} />
-              <span className="text-terminal-primary text-sm">Has Admin Rights (Root Access)</span>
-            </label>
-            <p className="text-terminal-dim text-xs ml-7">
-              Home server always has root access. Disabling may cause issues.
-            </p>
-          </div>
-        </div>
       </div>
     </Card>
   );
@@ -476,6 +463,74 @@ function NetworkServerCard({ server, isModified, onUpdate, onReset }: NetworkSer
   );
 }
 
+function ModifyAllServersModal({
+  isOpen,
+  onClose,
+  onModify,
+  serverCount,
+}: {
+  isOpen: boolean;
+  onClose: () => void;
+  onModify: (ram: number, cores: number) => void;
+  serverCount: number;
+}) {
+  const [ram, setRam] = useState(8);
+  const [cores, setCores] = useState(1);
+
+  // Reset state when modal opens
+  useEffect(() => {
+    if (isOpen) {
+      setRam(8);
+      setCores(1);
+    }
+  }, [isOpen]);
+
+  const handleModify = () => {
+    onModify(ram, cores);
+    onClose();
+  };
+
+  return (
+    <Modal
+      isOpen={isOpen}
+      onClose={onClose}
+      title="Modify All Purchased Servers"
+    >
+      <div className="space-y-4">
+        <div className="text-terminal-dim text-sm mb-2">
+          <p>This will update RAM and CPU cores for all {serverCount} purchased server{serverCount !== 1 ? 's' : ''}.</p>
+        </div>
+
+        <Select
+          label="RAM"
+          options={PURCHASED_RAM_OPTIONS}
+          value={ram}
+          onChange={(value) => setRam(Number(value))}
+          showSearch={false}
+        />
+
+        <NumberInput
+          label="CPU Cores"
+          value={cores}
+          onChange={setCores}
+          min={1}
+          max={8}
+          step={1}
+        />
+
+        <div className="flex gap-2 justify-end">
+          <Button variant="secondary" onClick={onClose}>
+            Cancel
+          </Button>
+          <Button onClick={handleModify} disabled={serverCount === 0}>
+            Modify {serverCount} Server{serverCount !== 1 ? 's' : ''}
+          </Button>
+        </div>
+      </div>
+    </Modal>
+  );
+}
+
 function AddPurchasedServerModal({
   isOpen,
   onClose,
@@ -711,12 +766,19 @@ export function ServersSection() {
   const addPurchasedServer = useSaveStore((state) => state.addPurchasedServer);
   const removePurchasedServer = useSaveStore((state) => state.removePurchasedServer);
   const hasServerChanges = useSaveStore((state) => state.hasServerChanges());
+  const hasHomeServerChanges = useSaveStore((state) => state.hasHomeServerChanges());
+  const resetHomeServer = useSaveStore((state) => state.resetHomeServer);
+  const hasNetworkServerChanges = useSaveStore((state) => state.hasNetworkServerChanges());
+  const resetNetworkServers = useSaveStore((state) => state.resetNetworkServers);
+  const hasPurchasedServerChanges = useSaveStore((state) => state.hasPurchasedServerChanges());
+  const resetPurchasedServers = useSaveStore((state) => state.resetPurchasedServers);
   const status = useSaveStore((state) => state.status);
 
   const [search, setSearch] = useState('');
   const [showModifiedOnly, setShowModifiedOnly] = useState(false);
   const [showHackableOnly, setShowHackableOnly] = useState(false);
   const [addModalMode, setAddModalMode] = useState<'single' | 'max' | null>(null);
+  const [showModifyAllModal, setShowModifyAllModal] = useState(false);
 
   const homeServer = useMemo(() => {
     if (!allServers) return null;
@@ -769,7 +831,6 @@ export function ServersSection() {
   }
 
   const existingHostnames = Object.keys(allServers);
-  const homeModified = homeServer && originalServers ? JSON.stringify(originalServers['home']) !== JSON.stringify(homeServer) : false;
 
   const tabs = [
     {
@@ -781,9 +842,9 @@ export function ServersSection() {
           {homeServer && (
             <HomeServerCard
               server={homeServer}
-              isModified={homeModified}
               onUpdate={updateServerStats}
-              onReset={resetServer}
+              hasChanges={hasHomeServerChanges}
+              onReset={resetHomeServer}
             />
           )}
 
@@ -792,7 +853,7 @@ export function ServersSection() {
             title="Purchased Servers"
             subtitle={`${purchasedServers.length} of ${MAX_PURCHASED_SERVERS} servers`}
             actions={
-              <div className="flex gap-2">
+              <div className="flex gap-2 items-center">
                 {purchasedServers.length < MAX_PURCHASED_SERVERS && (
                   <>
                     <Button onClick={() => setAddModalMode('single')} className="text-xs px-2 py-1">
@@ -804,16 +865,26 @@ export function ServersSection() {
                   </>
                 )}
                 {purchasedServers.length > 0 && (
-                  <Button
-                    onClick={() => {
-                      purchasedServers.forEach(server => removePurchasedServer(server.data.hostname));
-                    }}
-                    variant="danger"
-                    className="text-xs px-2 py-1"
-                  >
-                    DELETE ALL
-                  </Button>
+                  <>
+                    <Button onClick={() => setShowModifyAllModal(true)} className="text-xs px-2 py-1">
+                      MODIFY ALL
+                    </Button>
+                    <Button
+                      onClick={() => {
+                        purchasedServers.forEach(server => removePurchasedServer(server.data.hostname));
+                      }}
+                      variant="danger"
+                      className="text-xs px-2 py-1"
+                    >
+                      DELETE ALL
+                    </Button>
+                  </>
                 )}
+                <ResetAction
+                  title="Reset Purchased Servers"
+                  hasChanges={hasPurchasedServerChanges}
+                  onReset={resetPurchasedServers}
+                />
               </div>
             }
           >
@@ -856,6 +927,13 @@ export function ServersSection() {
         <Card
           title="Network Servers"
           subtitle={`${filteredNetworkServers.length} of ${networkServers.length} servers shown`}
+          actions={
+            <ResetAction
+              title="Reset Network Servers"
+              hasChanges={hasNetworkServerChanges}
+              onReset={resetNetworkServers}
+            />
+          }
         >
           <div className="border border-terminal-primary/50 bg-terminal-dim/10 p-3 mb-4">
             <h3 className="text-terminal-secondary uppercase text-sm mb-3">Filters</h3>
@@ -943,6 +1021,17 @@ export function ServersSection() {
         existingNames={existingHostnames}
         currentCount={purchasedServers.length}
         mode={addModalMode || 'single'}
+      />
+
+      <ModifyAllServersModal
+        isOpen={showModifyAllModal}
+        onClose={() => setShowModifyAllModal(false)}
+        onModify={(ram, cores) => {
+          purchasedServers.forEach(server => {
+            updateServerStats(server.data.hostname, { maxRam: ram, cpuCores: cores });
+          });
+        }}
+        serverCount={purchasedServers.length}
       />
     </div>
   );

@@ -53,6 +53,9 @@ interface SaveStoreState {
   ) => void;
   resetServer: (hostname: string) => void;
   resetAllServers: () => void;
+  resetHomeServer: () => void;
+  resetNetworkServers: () => void;
+  resetPurchasedServers: () => void;
   addPurchasedServer: (hostname: string, ram: number, cores: number) => void;
   removePurchasedServer: (hostname: string) => void;
   hasChanges: () => boolean;
@@ -63,6 +66,9 @@ interface SaveStoreState {
   hasFactionChanges: () => boolean;
   hasCompanyChanges: () => boolean;
   hasServerChanges: () => boolean;
+  hasHomeServerChanges: () => boolean;
+  hasNetworkServerChanges: () => boolean;
+  hasPurchasedServerChanges: () => boolean;
   clearError: () => void;
 }
 
@@ -606,6 +612,125 @@ export const useSaveStore = create<SaveStoreState>((set, get) => ({
     });
 
     return JSON.stringify(snapshot(originalSave)) !== JSON.stringify(snapshot(currentSave));
+  },
+
+  hasHomeServerChanges() {
+    const { originalSave, currentSave } = get();
+    if (!originalSave || !currentSave) return false;
+
+    const snapshot = (save: ParsedSaveData) => ({
+      maxRam: save.AllServersSave['home']?.data.maxRam,
+      cpuCores: save.AllServersSave['home']?.data.cpuCores,
+    });
+
+    return JSON.stringify(snapshot(originalSave)) !== JSON.stringify(snapshot(currentSave));
+  },
+
+  resetHomeServer() {
+    const { originalSave, currentSave } = get();
+    if (!originalSave || !currentSave) return;
+
+    const draft = cloneSave(currentSave);
+    const origHome = originalSave.AllServersSave['home'];
+    if (origHome && draft.AllServersSave['home']) {
+      draft.AllServersSave['home'].data.maxRam = origHome.data.maxRam;
+      draft.AllServersSave['home'].data.cpuCores = origHome.data.cpuCores;
+    }
+
+    set({ currentSave: draft });
+  },
+
+  hasNetworkServerChanges() {
+    const { originalSave, currentSave } = get();
+    if (!originalSave || !currentSave) return false;
+
+    // Get list of network servers (not home, not purchased)
+    const purchasedServers = new Set(currentSave.PlayerSave.data.purchasedServers);
+
+    const getNetworkServers = (save: ParsedSaveData) => {
+      const result: Record<string, unknown> = {};
+      for (const [hostname, server] of Object.entries(save.AllServersSave)) {
+        if (hostname !== 'home' && !purchasedServers.has(hostname)) {
+          result[hostname] = server;
+        }
+      }
+      return result;
+    };
+
+    return JSON.stringify(getNetworkServers(originalSave)) !== JSON.stringify(getNetworkServers(currentSave));
+  },
+
+  resetNetworkServers() {
+    const { originalSave, currentSave } = get();
+    if (!originalSave || !currentSave) return;
+
+    const draft = cloneSave(currentSave);
+    const purchasedServers = new Set(currentSave.PlayerSave.data.purchasedServers);
+
+    // Reset all network servers (not home, not purchased) to original state
+    for (const [hostname, origServer] of Object.entries(originalSave.AllServersSave)) {
+      if (hostname !== 'home' && !purchasedServers.has(hostname)) {
+        draft.AllServersSave[hostname] = structuredClone(origServer);
+      }
+    }
+
+    set({ currentSave: draft });
+  },
+
+  hasPurchasedServerChanges() {
+    const { originalSave, currentSave } = get();
+    if (!originalSave || !currentSave) return false;
+
+    const getPurchasedServerSnapshot = (save: ParsedSaveData) => {
+      const purchasedList = save.PlayerSave.data.purchasedServers;
+      const servers: Record<string, unknown> = {};
+      for (const hostname of purchasedList) {
+        servers[hostname] = save.AllServersSave[hostname];
+      }
+      return {
+        purchasedServers: purchasedList,
+        servers,
+        homeServersOnNetwork: save.AllServersSave['home']?.data.serversOnNetwork,
+      };
+    };
+
+    return JSON.stringify(getPurchasedServerSnapshot(originalSave)) !== JSON.stringify(getPurchasedServerSnapshot(currentSave));
+  },
+
+  resetPurchasedServers() {
+    const { originalSave, currentSave } = get();
+    if (!originalSave || !currentSave) return;
+
+    const draft = cloneSave(currentSave);
+    const originalPurchasedSet = new Set(originalSave.PlayerSave.data.purchasedServers);
+
+    // Rebuild AllServersSave with original key ordering to ensure JSON.stringify consistency
+    const originalKeyOrder = Object.keys(originalSave.AllServersSave);
+    const newAllServersSave: typeof draft.AllServersSave = {};
+
+    for (const hostname of originalKeyOrder) {
+      if (originalPurchasedSet.has(hostname)) {
+        // Purchased server - restore from original
+        newAllServersSave[hostname] = structuredClone(originalSave.AllServersSave[hostname]);
+      } else {
+        // Not a purchased server - keep current state (or original if missing)
+        newAllServersSave[hostname] = draft.AllServersSave[hostname] ?? structuredClone(originalSave.AllServersSave[hostname]);
+      }
+    }
+
+    draft.AllServersSave = newAllServersSave;
+
+    // Restore the purchasedServers list
+    draft.PlayerSave.data.purchasedServers = structuredClone(originalSave.PlayerSave.data.purchasedServers);
+
+    // Restore home server's serversOnNetwork array
+    if (originalSave.AllServersSave['home'] && draft.AllServersSave['home']) {
+      draft.AllServersSave['home'].data.serversOnNetwork = structuredClone(
+        originalSave.AllServersSave['home'].data.serversOnNetwork
+      );
+    }
+
+    set({ currentSave: draft });
   },
 
   addPurchasedServer(hostname, ram, cores) {

@@ -802,6 +802,65 @@ if (!result.success) {
 }
 ```
 
+### 5. JavaScript Object Key Ordering in JSON.stringify (CRITICAL!)
+
+**Problem**: `JSON.stringify()` serializes object keys in insertion order. When you delete a key and re-add it, the key moves to the end of the object, causing JSON comparison to fail even when data is semantically identical.
+
+**Scenario**: Purchased servers reset was "working" visually but `hasChanges()` still returned `true`.
+
+**Root cause discovered via debugging**:
+```
+Keys in same order: false
+Key order differs at index 73: {original: 'pserv-1', current: 'pserv-2'}
+```
+
+When restoring purchased servers:
+1. Original `AllServersSave` had keys: `[..., 'pserv-0', 'pserv-1', 'pserv-2', ...]`
+2. After delete + restore, keys became: `[..., 'pserv-0', 'pserv-2', ..., 'pserv-1']`
+3. `JSON.stringify()` produced different output → `hasChanges()` returned `true`
+
+**Solution**: When resetting data that involves deleting/re-adding object keys, **rebuild the entire object in original key order**:
+
+```typescript
+resetPurchasedServers() {
+  const { originalSave, currentSave } = get();
+  const draft = cloneSave(currentSave);
+
+  // CRITICAL: Rebuild AllServersSave with original key ordering
+  const originalKeyOrder = Object.keys(originalSave.AllServersSave);
+  const newAllServersSave: typeof draft.AllServersSave = {};
+
+  for (const hostname of originalKeyOrder) {
+    if (originalPurchasedSet.has(hostname)) {
+      // Purchased server - restore from original
+      newAllServersSave[hostname] = structuredClone(originalSave.AllServersSave[hostname]);
+    } else {
+      // Not a purchased server - keep current state
+      newAllServersSave[hostname] = draft.AllServersSave[hostname] ??
+        structuredClone(originalSave.AllServersSave[hostname]);
+    }
+  }
+
+  draft.AllServersSave = newAllServersSave;
+  // ... rest of reset logic
+}
+```
+
+**When to apply this pattern**:
+- Any reset that touches objects where keys may have been added/removed
+- Resets involving cross-references (e.g., purchased servers touches 3 places)
+- Any operation where you're restoring "deleted" items back to an object
+
+**Debugging approach**:
+1. Add console logging to compare key orders:
+   ```typescript
+   const originalKeys = Object.keys(originalSave.AllServersSave);
+   const currentKeys = Object.keys(currentSave.AllServersSave);
+   console.log('Keys in same order:', JSON.stringify(originalKeys) === JSON.stringify(currentKeys));
+   ```
+2. Find first key order difference to identify the problem area
+3. Implement key-order-preserving rebuild
+
 ---
 
 ## Faction Metadata
@@ -862,6 +921,7 @@ Faction cards display:
 
 *Track significant updates to this context document here.*
 
+- **2025-11-30** - Added critical documentation about JavaScript object key ordering issue with `JSON.stringify()` in "Common Pitfalls" section. When resetting data that involves deleting/re-adding object keys (like purchased servers), the entire object must be rebuilt in original key order to ensure `hasChanges()` detection works correctly. Includes code example, debugging approach, and scenarios where this pattern applies.
 - **2025-11-29** - Augmentation data updated with complete list from Bitburner v2.6.2 source (123 augmentations total). Corrected naming: SoA augmentations now use "SoA - " prefix (e.g., "SoA - Beauty of Aphrodite"); "EsperTech Bladeburner Eyewear" (not "Esper Eyewear"); "GOLEM Serum" (not "Golem Serum"); "I.N.T.E.R.L.I.N.K.E.D" (with periods). Includes all 9 Shadows of Anarchy augmentations, all 17 Bladeburner augmentations, all 3 Stanek's Gift augmentations, and NeuroFlux Governor with complete multiplier data.
 - **2025-11-29** - Companies section implemented with reputation/favor editors and job management. Store exposes `updateCompanyStats`, `setCurrentJob`, `resetCompany`, `resetCompanies`, and `hasCompanyChanges`. Company data (ALL_COMPANIES, COMPANY_JOBS, COMPANY_CITY_MAP) stored in `src/models/company-data.ts`. UI includes search, city filter, and status filters (employed/has reputation/modified). Job dropdown validates against available positions per company.
 - **2025-11-29** - Factions section filters now include a corporate-only toggle and a city dropdown; company/city metadata is defined in `src/components/sections/FactionsSection.tsx` (`companyFactions` and `factionCityMap`, derived from Bitburner `FactionInfo`) for filter logic.
