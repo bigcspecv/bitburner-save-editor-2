@@ -4,7 +4,13 @@
 
 **This document serves as persistent memory across chat sessions. Follow these guidelines:**
 
-1. **Commit messages**: When the user asks for a "commit message", provide a simple, short, single-line commit message for the currently staged changes. Check `git diff --staged` first - if nothing is staged, prompt the user to stage their work before requesting a commit message. Do NOT create the commit yourself unless explicitly asked.
+1. **Commit messages**: When the user asks for a "commit message":
+   - **ALWAYS run `git diff --staged` FIRST** to check what is staged
+   - **If nothing is staged** (empty output), tell the user: "There are no staged changes. Please stage your changes first (e.g., `git add <files>`) and then ask for a commit message."
+   - **Do NOT provide a commit message if nothing is staged** - this is critical!
+   - **Do NOT run `git diff` (unstaged)** as a fallback - only staged changes matter for commits
+   - If changes ARE staged, provide a simple, short, single-line commit message
+   - Do NOT create the commit yourself unless explicitly asked
 
 2. **Maintain this document**: When you discover important architectural decisions, patterns, gotchas, or implementation details during your work, add them to the appropriate section of this document. This ensures future AI agents have the context they need.
 

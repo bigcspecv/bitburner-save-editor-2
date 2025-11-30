@@ -1,7 +1,9 @@
 import type { ParsedSaveData } from '../models/types';
+import { AUGMENTATION_DATA, ALL_AUGMENTATIONS } from '../models/data/augmentations';
+import { nameMatchesAugmentation } from './augmentation-utils';
 
-const DONATION_BONUS = 212 / 1_000_000 / 100; // matches CONSTANTS.Donations handling in-game
 const EXPLOIT_MULT = 1.001; // see applyExploit
+const DONATION_BONUS = 212 / 1_000_000 / 100; // matches CONSTANTS.Donations handling in-game for donors
 
 export const MULTIPLIER_FIELDS = [
   'hacking_chance',
@@ -140,50 +142,6 @@ const SF9_FIELDS_DEC: MultiplierField[] = [
 
 const SF11_FIELDS: MultiplierField[] = ['work_money', 'company_rep'];
 
-const AUGMENTATION_MULTS: Record<
-  string,
-  Partial<Record<MultiplierField, number>>
-> = {
-  'BitWire': { hacking: 1.05 },
-  'Neurotrainer I': {
-    hacking_exp: 1.1,
-    strength_exp: 1.1,
-    defense_exp: 1.1,
-    dexterity_exp: 1.1,
-    agility_exp: 1.1,
-    charisma_exp: 1.1,
-  },
-  'Synaptic Enhancement Implant': { hacking_speed: 1.03 },
-  'NeuroFlux Governor': {
-    hacking_chance: 1.01 + DONATION_BONUS,
-    hacking_speed: 1.01 + DONATION_BONUS,
-    hacking_money: 1.01 + DONATION_BONUS,
-    hacking_grow: 1.01 + DONATION_BONUS,
-    hacking: 1.01 + DONATION_BONUS,
-    strength: 1.01 + DONATION_BONUS,
-    defense: 1.01 + DONATION_BONUS,
-    dexterity: 1.01 + DONATION_BONUS,
-    agility: 1.01 + DONATION_BONUS,
-    charisma: 1.01 + DONATION_BONUS,
-    hacking_exp: 1.01 + DONATION_BONUS,
-    strength_exp: 1.01 + DONATION_BONUS,
-    defense_exp: 1.01 + DONATION_BONUS,
-    dexterity_exp: 1.01 + DONATION_BONUS,
-    agility_exp: 1.01 + DONATION_BONUS,
-    charisma_exp: 1.01 + DONATION_BONUS,
-    company_rep: 1.01 + DONATION_BONUS,
-    faction_rep: 1.01 + DONATION_BONUS,
-    crime_money: 1.01 + DONATION_BONUS,
-    crime_success: 1.01 + DONATION_BONUS,
-    hacknet_node_money: 1.01 + DONATION_BONUS,
-    hacknet_node_purchase_cost: 1 / (1.01 + DONATION_BONUS),
-    hacknet_node_ram_cost: 1 / (1.01 + DONATION_BONUS),
-    hacknet_node_core_cost: 1 / (1.01 + DONATION_BONUS),
-    hacknet_node_level_cost: 1 / (1.01 + DONATION_BONUS),
-    work_money: 1.01 + DONATION_BONUS,
-  },
-};
-
 function applySourceFileBonus(field: MultiplierField, sourceFile: number, level: number): number {
   if (level <= 0) return 1;
 
@@ -269,15 +227,35 @@ function applySourceFileBonus(field: MultiplierField, sourceFile: number, level:
   return 1;
 }
 
+/**
+ * Look up augmentation multiplier from AUGMENTATION_DATA.
+ * Matches by key, canonical name, or alias.
+ */
 function applyAugmentationMults(field: MultiplierField, name: string, level: number): number {
-  const entry = AUGMENTATION_MULTS[name];
-  if (!entry?.[field]) return 1;
+  // Find the augmentation key that matches this name
+  const augKey = ALL_AUGMENTATIONS.find((key) => nameMatchesAugmentation(name, key));
+  if (!augKey) return 1;
 
-  if (name === 'NeuroFlux Governor') {
-    return entry[field]! ** level;
+  const augData = AUGMENTATION_DATA[augKey];
+  if (!augData?.multipliers) return 1;
+
+  let multiplier = augData.multipliers[field];
+  if (multiplier === undefined) return 1;
+
+  // NeuroFlux Governor stacks multiplicatively per level
+  // and includes donation bonus for donors
+  if (augKey === 'NeuroFluxGovernor') {
+    // Apply donation bonus to NFG multiplier (handles both positive and cost-reduction multipliers)
+    if (multiplier > 1) {
+      multiplier = multiplier + DONATION_BONUS;
+    } else if (multiplier < 1) {
+      // Cost reductions: base is 1/1.01, with donation it becomes 1/(1.01 + DONATION_BONUS)
+      multiplier = 1 / (1 / multiplier + DONATION_BONUS);
+    }
+    return multiplier ** level;
   }
 
-  return entry[field]!;
+  return multiplier;
 }
 
 export function computeAllMultipliers(player: ParsedSaveData['PlayerSave']['data']): MultiplierComputation[] {

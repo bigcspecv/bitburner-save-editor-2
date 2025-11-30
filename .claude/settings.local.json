@@ -15,7 +15,8 @@
       "Bash(npx tsc:*)",
       "Bash(cat:*)",
       "Bash(node:*)",
-      "Bash(gunzip:*)"
+      "Bash(gunzip:*)",
+      "Bash(npm test:*)"
     ],
     "deny": [],
     "ask": []
