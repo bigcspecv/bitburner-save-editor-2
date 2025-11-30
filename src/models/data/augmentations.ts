@@ -1,6 +1,6 @@
 import type { AugmentationData, AugmentationMultipliers } from "../types";
 
-// All augmentations in the game
+// All augmentations in the game (extracted from Bitburner v2.6.2)
 export const ALL_AUGMENTATIONS = [
   "ADRPheromone1",
   "ADRPheromone2",
@@ -128,7 +128,6 @@ export const ALL_AUGMENTATIONS = [
   "ZOE",
 ] as const;
 
-
 export const AUGMENTATION_DATA: Record<string, AugmentationData> = {
   ADRPheromone1: {
     name: "ADR-V1 Pheromone Gene",
@@ -163,7 +162,7 @@ export const AUGMENTATION_DATA: Record<string, AugmentationData> = {
     multipliers: { hacking_speed: 1.02, hacking_chance: 1.05, hacking_exp: 1.05 },
   },
   BeautyOfAphrodite: {
-    name: "Beauty of Aphrodite",
+    name: "SoA - Beauty of Aphrodite",
     repCost: 10000,
     moneyCost: 1000000,
     info: "Pheromone extruder injected in the thoracodorsal nerve. Emits pleasing scent guaranteed to make conversational partners more agreeable.",
@@ -173,7 +172,7 @@ export const AUGMENTATION_DATA: Record<string, AugmentationData> = {
     multipliers: {},
   },
   BigDsBigBrain: {
-    name: "BigD's Big Brain",
+    name: "BigD's Big ... Brain",
     repCost: Infinity,
     moneyCost: Infinity,
     info: "A chip containing the psyche of the greatest BitRunner to ever exist. Installing this relic significantly increases ALL of your stats. However, it may have unintended consequence on the users mental well-being.",
@@ -252,7 +251,14 @@ export const AUGMENTATION_DATA: Record<string, AugmentationData> = {
     info: "A powered exoskeleton suit designed as armor for Bladeburners units. This exoskeleton is incredibly adaptable and can protect the wearer from blunt, piercing, concussive, thermal, chemical, and electric trauma. It also enhances the user's physical abilities.",
     isSpecial: true,
     factions: ["Bladeburners"],
-    multipliers: { strength: 1.04, defense: 1.04, dexterity: 1.04, agility: 1.04, bladeburner_stamina_gain: 1.02, bladeburner_success_chance: 1.03 },
+    multipliers: {
+      strength: 1.04,
+      defense: 1.04,
+      dexterity: 1.04,
+      agility: 1.04,
+      bladeburner_stamina_gain: 1.02,
+      bladeburner_success_chance: 1.03
+    },
   },
   BladeArmorEnergyShielding: {
     name: "BLADE-51b Tesla Armor: Energy Shielding Upgrade",
@@ -291,7 +297,11 @@ export const AUGMENTATION_DATA: Record<string, AugmentationData> = {
     info: "Upgrades the BLADE-51b Tesla Armor with Ion Power Cells, which are capable of more efficiently storing and using power.",
     isSpecial: true,
     factions: ["Bladeburners"],
-    multipliers: { bladeburner_success_chance: 1.05, bladeburner_stamina_gain: 1.02, bladeburner_max_stamina: 1.05 },
+    multipliers: {
+      bladeburner_success_chance: 1.05,
+      bladeburner_stamina_gain: 1.02,
+      bladeburner_max_stamina: 1.05
+    },
     prereqs: ["BladeArmor"],
   },
   BladeArmorUnibeam: {
@@ -311,7 +321,11 @@ export const AUGMENTATION_DATA: Record<string, AugmentationData> = {
     info: "A cybernetic foot augmentation that was specifically created for Bladeburners during the Synthoid Uprising. The organic musculature of the human foot is enhanced with flexible carbon nanotube matrices that are controlled by intelligent servo-motors.",
     isSpecial: true,
     factions: ["Bladeburners"],
-    multipliers: { agility: 1.05, bladeburner_max_stamina: 1.05, bladeburner_stamina_gain: 1.05 },
+    multipliers: {
+      agility: 1.05,
+      bladeburner_max_stamina: 1.05,
+      bladeburner_stamina_gain: 1.05
+    },
   },
   BladesSimulacrum: {
     name: "The Blade's Simulacrum",
@@ -348,7 +362,7 @@ export const AUGMENTATION_DATA: Record<string, AugmentationData> = {
     multipliers: {},
   },
   ChaosOfDionysus: {
-    name: "Chaos of Dionysus",
+    name: "SoA - Chaos of Dionysus",
     repCost: 10000,
     moneyCost: 1000000,
     info: "Opto-occipito implant to process visual signals before brain interpretation.",
@@ -384,7 +398,7 @@ export const AUGMENTATION_DATA: Record<string, AugmentationData> = {
     prereqs: ["CombatRib2", "CombatRib1"],
   },
   CongruityImplant: {
-    name: "Congruity Implant",
+    name: "violet Congruity Implant",
     repCost: Infinity,
     moneyCost: 50000000000000,
     info: "Developed by a pioneer in Grafting research, this implant generates pulses of stability which seem to have a nullifying effect against the Entropy virus.\n\nNote: For unknown reasons, the lowercase 'v' appears to be an integral component to its functionality.",
@@ -476,7 +490,11 @@ export const AUGMENTATION_DATA: Record<string, AugmentationData> = {
     info: "A DNA recombination of the EMS-4 Gene. This genetic engineering technique was originally used on Bladeburners during the Synthoid uprising to induce wakefulness and concentration, suppress fear, reduce empathy, improve reflexes, and improve memory, among other things.",
     isSpecial: true,
     factions: ["Bladeburners"],
-    multipliers: { bladeburner_success_chance: 1.03, bladeburner_analysis: 1.05, bladeburner_stamina_gain: 1.02 },
+    multipliers: {
+      bladeburner_success_chance: 1.03,
+      bladeburner_analysis: 1.05,
+      bladeburner_stamina_gain: 1.02
+    },
   },
   ENM: {
     name: "Embedded Netburner Module",
@@ -501,7 +519,13 @@ export const AUGMENTATION_DATA: Record<string, AugmentationData> = {
     moneyCost: 2500000000,
     info: "The Core library is an implant that upgrades the firmware of the Embedded Netburner Module. This upgrade allows the Embedded Netburner Module to generate its own data on a network.",
     factions: ["BitRunners", "The Black Hand", "ECorp", "MegaCorp", "Fulcrum Secret Technologies", "NWO", "Blade Industries"],
-    multipliers: { hacking_speed: 1.03, hacking_money: 1.1, hacking_chance: 1.03, hacking_exp: 1.07, hacking: 1.07 },
+    multipliers: {
+      hacking_speed: 1.03,
+      hacking_money: 1.1,
+      hacking_chance: 1.03,
+      hacking_exp: 1.07,
+      hacking: 1.07
+    },
     prereqs: ["ENM"],
   },
   ENMCoreV2: {
@@ -510,7 +534,13 @@ export const AUGMENTATION_DATA: Record<string, AugmentationData> = {
     moneyCost: 4500000000,
     info: "The Core V2 library is an implant that upgrades the firmware of the Embedded Netburner Module. This upgraded firmware allows the Embedded Netburner Module to control information on a network by re-routing traffic, spoofing IP addresses, and altering the data inside network packets.",
     factions: ["BitRunners", "ECorp", "MegaCorp", "Fulcrum Secret Technologies", "NWO", "Blade Industries", "OmniTek Incorporated", "KuaiGong International"],
-    multipliers: { hacking_speed: 1.05, hacking_money: 1.3, hacking_chance: 1.05, hacking_exp: 1.15, hacking: 1.08 },
+    multipliers: {
+      hacking_speed: 1.05,
+      hacking_money: 1.3,
+      hacking_chance: 1.05,
+      hacking_exp: 1.15,
+      hacking: 1.08
+    },
     prereqs: ["ENMCore", "ENM"],
   },
   ENMCoreV3: {
@@ -519,7 +549,13 @@ export const AUGMENTATION_DATA: Record<string, AugmentationData> = {
     moneyCost: 7500000000,
     info: "The Core V3 library is an implant that upgrades the firmware of the Embedded Netburner Module. This upgraded firmware allows the Embedded Netburner Module to seamlessly inject code into any device on a network.",
     factions: ["ECorp", "MegaCorp", "Fulcrum Secret Technologies", "NWO", "Daedalus", "The Covenant", "Illuminati"],
-    multipliers: { hacking_speed: 1.05, hacking_money: 1.4, hacking_chance: 1.1, hacking_exp: 1.25, hacking: 1.1 },
+    multipliers: {
+      hacking_speed: 1.05,
+      hacking_money: 1.4,
+      hacking_chance: 1.1,
+      hacking_exp: 1.25,
+      hacking: 1.1
+    },
     prereqs: ["ENMCoreV2", "ENMCore", "ENM"],
   },
   ENMDMA: {
@@ -548,7 +584,7 @@ export const AUGMENTATION_DATA: Record<string, AugmentationData> = {
     multipliers: { charisma: 1.6, charisma_exp: 1.6 },
   },
   EsperEyewear: {
-    name: "Esper Eyewear",
+    name: "EsperTech Bladeburner Eyewear",
     repCost: 1250,
     moneyCost: 165000000,
     info: "Ballistic-grade protective and retractable eyewear that was designed specifically for Bladeburner units. This is implanted by installing a mechanical frame in the skull's orbit. This frame interfaces with the brain and allows the user to automatically extrude and extract the eyewear. The eyewear protects against debris, shrapnel, lasers, blinding flashes, and gas. It is also embedded with a data processing chip that can be programmed to display an AR HUD to assist the user in field missions.",
@@ -557,7 +593,7 @@ export const AUGMENTATION_DATA: Record<string, AugmentationData> = {
     multipliers: { bladeburner_success_chance: 1.03, dexterity: 1.05 },
   },
   FloodOfPoseidon: {
-    name: "Flood of Poseidon",
+    name: "SoA - Flood of Poseidon",
     repCost: 10000,
     moneyCost: 1000000,
     info: "Transtinatium VVD reticulator used in optico-sterbing recognition.",
@@ -584,13 +620,19 @@ export const AUGMENTATION_DATA: Record<string, AugmentationData> = {
     },
   },
   GolemSerum: {
-    name: "Golem Serum",
+    name: "GOLEM Serum",
     repCost: 31250,
     moneyCost: 11000000000,
     info: "A serum that permanently enhances many aspects of human capabilities, including strength, speed, immune system enhancements, and mitochondrial efficiency. The serum was originally developed by the Chinese military in an attempt to create super soldiers.",
     isSpecial: true,
     factions: ["Bladeburners"],
-    multipliers: { strength: 1.07, defense: 1.07, dexterity: 1.07, agility: 1.07, bladeburner_stamina_gain: 1.05 },
+    multipliers: {
+      strength: 1.07,
+      defense: 1.07,
+      dexterity: 1.07,
+      agility: 1.07,
+      bladeburner_stamina_gain: 1.05,
+    },
   },
   GrapheneBionicArms: {
     name: "Graphene Bionic Arms Upgrade",
@@ -685,7 +727,7 @@ export const AUGMENTATION_DATA: Record<string, AugmentationData> = {
     multipliers: { strength: 1.08, defense: 1.08, agility: 1.08, dexterity: 1.08 },
   },
   HiveMind: {
-    name: "HiveMind",
+    name: "ECorp HVMind Implant",
     repCost: 1500000,
     moneyCost: 5500000000,
     info: "A brain implant developed by ECorp. They do not reveal what exactly the implant does, but they promise that it will greatly enhance your abilities.",
@@ -694,7 +736,7 @@ export const AUGMENTATION_DATA: Record<string, AugmentationData> = {
     multipliers: { hacking_grow: 3 },
   },
   HuntOfArtemis: {
-    name: "Hunt of Artemis",
+    name: "SoA - Hunt of Artemis",
     repCost: 10000,
     moneyCost: 1000000,
     info: "Magneto-turboencabulator based on technology by Micha Eike Siemon, increases the user's electro-magnetic sensitivity.",
@@ -747,16 +789,22 @@ export const AUGMENTATION_DATA: Record<string, AugmentationData> = {
     multipliers: { crime_success: 1.25, crime_money: 1.1, dexterity: 1.1 },
   },
   INTERLINKED: {
-    name: "INTERLINKED",
+    name: "I.N.T.E.R.L.I.N.K.E.D",
     repCost: 25000,
     moneyCost: 5500000000,
     info: "A drug which incites a DNA modification to the body's extracellular matrix (ECM). This improves the ECM's ability to structurally support the body, granting heightened strength and durability.",
     isSpecial: true,
     factions: ["Bladeburners"],
-    multipliers: { strength_exp: 1.05, defense_exp: 1.05, dexterity_exp: 1.05, agility_exp: 1.05, bladeburner_max_stamina: 1.1 },
+    multipliers: {
+      strength_exp: 1.05,
+      defense_exp: 1.05,
+      dexterity_exp: 1.05,
+      agility_exp: 1.05,
+      bladeburner_max_stamina: 1.1,
+    },
   },
   KnowledgeOfApollo: {
-    name: "Knowledge of Apollo",
+    name: "SoA - Knowledge of Apollo",
     repCost: 10000,
     moneyCost: 1000000,
     info: "Neodynic retention fjengeln spoofer using -φ karmions, net positive effect on implantee's delta wave.",
@@ -783,7 +831,7 @@ export const AUGMENTATION_DATA: Record<string, AugmentationData> = {
     prereqs: ["LuminCloaking1"],
   },
   MightOfAres: {
-    name: "Might of Ares",
+    name: "SoA - Might of Ares",
     repCost: 10000,
     moneyCost: 1000000,
     info: "Extra-ocular neurons taken from old martial arts master. Injecting them gives the user the ability to predict the enemy's movement.",
@@ -847,7 +895,7 @@ export const AUGMENTATION_DATA: Record<string, AugmentationData> = {
     info: "Undetectable adamantium nanobots injected in the user's bloodstream. The NeuroFlux Governor monitors and regulates all aspects of the human body, essentially 'governing' the body. By doing so, it improves the user's performance for most actions.",
     stats: "This special augmentation can be leveled up infinitely. Each level of this augmentation increases MOST multipliers by 1%, stacking multiplicatively.",
     isSpecial: true,
-    factions: ["Most factions except Shadows of Anarchy, Bladeburners, and Church of the Machine God"],
+    factions: ["Tian Di Hui", "Speakers for the Dead", "The Dark Army", "The Syndicate", "Silhouette", "Tetrads", "Slum Snakes"],
     multipliers: {
       hacking_chance: 1.01,
       hacking_speed: 1.01,
@@ -870,10 +918,10 @@ export const AUGMENTATION_DATA: Record<string, AugmentationData> = {
       crime_money: 1.01,
       crime_success: 1.01,
       hacknet_node_money: 1.01,
-      hacknet_node_purchase_cost: 0.990099,
-      hacknet_node_ram_cost: 0.990099,
-      hacknet_node_core_cost: 0.990099,
-      hacknet_node_level_cost: 0.990099,
+      hacknet_node_purchase_cost: 1 / 1.01,
+      hacknet_node_ram_cost: 1 / 1.01,
+      hacknet_node_core_cost: 1 / 1.01,
+      hacknet_node_level_cost: 1 / 1.01,
       work_money: 1.01,
     },
   },
@@ -908,7 +956,14 @@ export const AUGMENTATION_DATA: Record<string, AugmentationData> = {
     moneyCost: 4000000,
     info: "A decentralized cranial implant that improves the brain's ability to learn. It is installed by releasing millions of nanobots into the human brain, each of which attaches to a different neural pathway to enhance the brain's ability to retain and retrieve information.",
     factions: ["CyberSec", "Aevum"],
-    multipliers: { hacking_exp: 1.1, strength_exp: 1.1, defense_exp: 1.1, dexterity_exp: 1.1, agility_exp: 1.1, charisma_exp: 1.1 },
+    multipliers: {
+      hacking_exp: 1.1,
+      strength_exp: 1.1,
+      defense_exp: 1.1,
+      dexterity_exp: 1.1,
+      agility_exp: 1.1,
+      charisma_exp: 1.1,
+    },
   },
   Neurotrainer2: {
     name: "Neurotrainer II",
@@ -916,7 +971,14 @@ export const AUGMENTATION_DATA: Record<string, AugmentationData> = {
     moneyCost: 45000000,
     info: "A decentralized cranial implant that improves the brain's ability to learn. This is a more powerful version of the Neurotrainer I augmentation, but it does not require Neurotrainer I to be installed as a prerequisite.",
     factions: ["BitRunners", "NiteSec"],
-    multipliers: { hacking_exp: 1.15, strength_exp: 1.15, defense_exp: 1.15, dexterity_exp: 1.15, agility_exp: 1.15, charisma_exp: 1.15 },
+    multipliers: {
+      hacking_exp: 1.15,
+      strength_exp: 1.15,
+      defense_exp: 1.15,
+      dexterity_exp: 1.15,
+      agility_exp: 1.15,
+      charisma_exp: 1.15,
+    },
   },
   Neurotrainer3: {
     name: "Neurotrainer III",
@@ -924,7 +986,14 @@ export const AUGMENTATION_DATA: Record<string, AugmentationData> = {
     moneyCost: 130000000,
     info: "A decentralized cranial implant that improves the brain's ability to learn. This is a more powerful version of the Neurotrainer I and Neurotrainer II augmentation, but it does not require either of them to be installed as a prerequisite.",
     factions: ["NWO", "Four Sigma"],
-    multipliers: { hacking_exp: 1.2, strength_exp: 1.2, defense_exp: 1.2, dexterity_exp: 1.2, agility_exp: 1.2, charisma_exp: 1.2 },
+    multipliers: {
+      hacking_exp: 1.2,
+      strength_exp: 1.2,
+      defense_exp: 1.2,
+      dexterity_exp: 1.2,
+      agility_exp: 1.2,
+      charisma_exp: 1.2,
+    },
   },
   NuoptimalInjectorImplant: {
     name: "Nuoptimal Nootropic Injector Implant",
@@ -940,7 +1009,12 @@ export const AUGMENTATION_DATA: Record<string, AugmentationData> = {
     moneyCost: 2500000,
     info: "A thermal-powered artificial nutrition generator. Endogenously synthesizes glucose, amino acids, and vitamins, and redistributes them across the body. The device is powered by the body's naturally wasted energy in the form of heat.",
     factions: ["New Tokyo"],
-    multipliers: { strength_exp: 1.2, defense_exp: 1.2, dexterity_exp: 1.2, agility_exp: 1.2 },
+    multipliers: {
+      strength_exp: 1.2,
+      defense_exp: 1.2,
+      dexterity_exp: 1.2,
+      agility_exp: 1.2,
+    },
   },
   nextSENS: {
     name: "nextSENS Gene Modification",
@@ -948,7 +1022,14 @@ export const AUGMENTATION_DATA: Record<string, AugmentationData> = {
     moneyCost: 1925000000,
     info: "The body is genetically re-engineered to maintain a state of negligible senescence, preventing the body from deteriorating with age.",
     factions: ["Clarke Incorporated"],
-    multipliers: { hacking: 1.2, strength: 1.2, defense: 1.2, dexterity: 1.2, agility: 1.2, charisma: 1.2 },
+    multipliers: {
+      hacking: 1.2,
+      strength: 1.2,
+      defense: 1.2,
+      dexterity: 1.2,
+      agility: 1.2,
+      charisma: 1.2,
+    },
   },
   OmniTekInfoLoad: {
     name: "OmniTek InfoLoad",
@@ -965,7 +1046,12 @@ export const AUGMENTATION_DATA: Record<string, AugmentationData> = {
     info: "A bionic shoulder augmentation for the right shoulder. Using cybernetics, the ORION-MKIV shoulder enhances the strength and dexterity of the user's right arm. It also provides protection due to its crystallized graphene plating.",
     isSpecial: true,
     factions: ["Bladeburners"],
-    multipliers: { defense: 1.05, strength: 1.05, dexterity: 1.05, bladeburner_success_chance: 1.04 },
+    multipliers: {
+      defense: 1.05,
+      strength: 1.05,
+      dexterity: 1.05,
+      bladeburner_success_chance: 1.04,
+    },
   },
   PCDNI: {
     name: "PC Direct-Neural Interface",
@@ -999,7 +1085,15 @@ export const AUGMENTATION_DATA: Record<string, AugmentationData> = {
     moneyCost: 2000000000,
     info: "A 'Probability Computation Matrix' is installed in the frontal cortex. This implant uses advanced mathematical algorithms to rapidly identify and compute statistical outcomes of nearly every situation.",
     factions: ["Aevum"],
-    multipliers: { charisma: 1.0777, charisma_exp: 1.0777, work_money: 1.777, faction_rep: 1.0777, company_rep: 1.0777, crime_success: 1.0777, crime_money: 1.0777 },
+    multipliers: {
+      charisma: 1.0777,
+      charisma_exp: 1.0777,
+      work_money: 1.777,
+      faction_rep: 1.0777,
+      company_rep: 1.0777,
+      crime_success: 1.0777,
+      crime_money: 1.0777,
+    },
   },
   PhotosyntheticCells: {
     name: "Photosynthetic Cells",
@@ -1036,7 +1130,12 @@ export const AUGMENTATION_DATA: Record<string, AugmentationData> = {
     moneyCost: 25000000000000,
     info: "A brain implant that wirelessly connects you to the Illuminati's quantum supercomputer, allowing you to access and use its incredible computing power.",
     factions: ["Illuminati"],
-    multipliers: { hacking: 1.75, hacking_speed: 2, hacking_chance: 2.5, hacking_money: 4 },
+    multipliers: {
+      hacking: 1.75,
+      hacking_speed: 2,
+      hacking_chance: 2.5,
+      hacking_money: 4,
+    },
   },
   SNA: {
     name: "Social Negotiation Assistant (S.N.A)",
@@ -1052,7 +1151,13 @@ export const AUGMENTATION_DATA: Record<string, AugmentationData> = {
     moneyCost: 4875000000,
     info: "The SPTN-97 gene is injected into the genome. The SPTN-97 gene is an artificially-synthesized gene that was developed by DARPA to create super-soldiers through genetic modification. The gene was outlawed in 2056.",
     factions: ["The Covenant"],
-    multipliers: { strength: 1.75, defense: 1.75, dexterity: 1.75, agility: 1.75, hacking: 1.15 },
+    multipliers: {
+      strength: 1.75,
+      defense: 1.75,
+      dexterity: 1.75,
+      agility: 1.75,
+      hacking: 1.15,
+    },
   },
   ShadowsSimulacrum: {
     name: "The Shadow's Simulacrum",
@@ -1098,7 +1203,7 @@ export const AUGMENTATION_DATA: Record<string, AugmentationData> = {
     name: "Stanek's Gift - Genesis",
     repCost: 0,
     moneyCost: 0,
-    info: "Allison \"Mother\" Stanek imparts you with her gift. An experimental Augmentation implanted at the base of the neck. It allows you to overclock your entire system by carefully changing the configuration.",
+    info: 'Allison "Mother" Stanek imparts you with her gift. An experimental Augmentation implanted at the base of the neck. It allows you to overclock your entire system by carefully changing the configuration.',
     stats: "Its unstable nature decreases all your stats by 10%.",
     isSpecial: true,
     factions: ["Church of the Machine God"],
@@ -1140,32 +1245,32 @@ export const AUGMENTATION_DATA: Record<string, AugmentationData> = {
     isSpecial: true,
     factions: ["Church of the Machine God"],
     multipliers: {
-      hacking_chance: 1.0555555556,
-      hacking_speed: 1.0555555556,
-      hacking_money: 1.0555555556,
-      hacking_grow: 1.0555555556,
-      hacking: 1.0555555556,
-      strength: 1.0555555556,
-      defense: 1.0555555556,
-      dexterity: 1.0555555556,
-      agility: 1.0555555556,
-      charisma: 1.0555555556,
-      hacking_exp: 1.0555555556,
-      strength_exp: 1.0555555556,
-      defense_exp: 1.0555555556,
-      dexterity_exp: 1.0555555556,
-      agility_exp: 1.0555555556,
-      charisma_exp: 1.0555555556,
-      company_rep: 1.0555555556,
-      faction_rep: 1.0555555556,
-      crime_money: 1.0555555556,
-      crime_success: 1.0555555556,
-      hacknet_node_money: 1.0555555556,
-      hacknet_node_purchase_cost: 0.954545455,
-      hacknet_node_ram_cost: 0.954545455,
-      hacknet_node_core_cost: 0.954545455,
-      hacknet_node_level_cost: 0.954545455,
-      work_money: 1.0555555556,
+      hacking_chance: 0.95 / 0.9,
+      hacking_speed: 0.95 / 0.9,
+      hacking_money: 0.95 / 0.9,
+      hacking_grow: 0.95 / 0.9,
+      hacking: 0.95 / 0.9,
+      strength: 0.95 / 0.9,
+      defense: 0.95 / 0.9,
+      dexterity: 0.95 / 0.9,
+      agility: 0.95 / 0.9,
+      charisma: 0.95 / 0.9,
+      hacking_exp: 0.95 / 0.9,
+      strength_exp: 0.95 / 0.9,
+      defense_exp: 0.95 / 0.9,
+      dexterity_exp: 0.95 / 0.9,
+      agility_exp: 0.95 / 0.9,
+      charisma_exp: 0.95 / 0.9,
+      company_rep: 0.95 / 0.9,
+      faction_rep: 0.95 / 0.9,
+      crime_money: 0.95 / 0.9,
+      crime_success: 0.95 / 0.9,
+      hacknet_node_money: 0.95 / 0.9,
+      hacknet_node_purchase_cost: 1.05 / 1.1,
+      hacknet_node_ram_cost: 1.05 / 1.1,
+      hacknet_node_core_cost: 1.05 / 1.1,
+      hacknet_node_level_cost: 1.05 / 1.1,
+      work_money: 0.95 / 0.9,
     },
     prereqs: ["StaneksGift1"],
   },
@@ -1173,37 +1278,37 @@ export const AUGMENTATION_DATA: Record<string, AugmentationData> = {
     name: "Stanek's Gift - Serenity",
     repCost: 100000000,
     moneyCost: 0,
-    info: "The synthesis of human and machine is nothing to fear. It is our destiny. You will become greater than the sum of our parts. As One. Embrace your gift fully and wholly free of its accursed toll. Serenity brings tranquility in the form of no longer suffering a stat penalty.",
+    info: "The synthesis of human and machine is nothing to fear. It is our destiny. You will become greater than the sum of our parts. As One. Embrace your gift fully and wholly free of its accursed toll. Serenity brings tranquility in the form of no longer suffering a stat penalty. ",
     stats: "Stanek's Gift has no penalty.",
     isSpecial: true,
     factions: ["Church of the Machine God"],
     multipliers: {
-      hacking_chance: 1.0526315789,
-      hacking_speed: 1.0526315789,
-      hacking_money: 1.0526315789,
-      hacking_grow: 1.0526315789,
-      hacking: 1.0526315789,
-      strength: 1.0526315789,
-      defense: 1.0526315789,
-      dexterity: 1.0526315789,
-      agility: 1.0526315789,
-      charisma: 1.0526315789,
-      hacking_exp: 1.0526315789,
-      strength_exp: 1.0526315789,
-      defense_exp: 1.0526315789,
-      dexterity_exp: 1.0526315789,
-      agility_exp: 1.0526315789,
-      charisma_exp: 1.0526315789,
-      company_rep: 1.0526315789,
-      faction_rep: 1.0526315789,
-      crime_money: 1.0526315789,
-      crime_success: 1.0526315789,
-      hacknet_node_money: 1.0526315789,
-      hacknet_node_purchase_cost: 0.952380952,
-      hacknet_node_ram_cost: 0.952380952,
-      hacknet_node_core_cost: 0.952380952,
-      hacknet_node_level_cost: 0.952380952,
-      work_money: 1.0526315789,
+      hacking_chance: 1 / 0.95,
+      hacking_speed: 1 / 0.95,
+      hacking_money: 1 / 0.95,
+      hacking_grow: 1 / 0.95,
+      hacking: 1 / 0.95,
+      strength: 1 / 0.95,
+      defense: 1 / 0.95,
+      dexterity: 1 / 0.95,
+      agility: 1 / 0.95,
+      charisma: 1 / 0.95,
+      hacking_exp: 1 / 0.95,
+      strength_exp: 1 / 0.95,
+      defense_exp: 1 / 0.95,
+      dexterity_exp: 1 / 0.95,
+      agility_exp: 1 / 0.95,
+      charisma_exp: 1 / 0.95,
+      company_rep: 1 / 0.95,
+      faction_rep: 1 / 0.95,
+      crime_money: 1 / 0.95,
+      crime_success: 1 / 0.95,
+      hacknet_node_money: 1 / 0.95,
+      hacknet_node_purchase_cost: 1 / 1.05,
+      hacknet_node_ram_cost: 1 / 1.05,
+      hacknet_node_core_cost: 1 / 1.05,
+      hacknet_node_level_cost: 1 / 1.05,
+      work_money: 1 / 0.95,
     },
     prereqs: ["StaneksGift2", "StaneksGift1"],
   },
@@ -1279,7 +1384,13 @@ export const AUGMENTATION_DATA: Record<string, AugmentationData> = {
     moneyCost: 550000000,
     info: "A highly advanced bionic hand. This prosthetic not only enhances the user's strength and dexterity, but is also embedded with hardware and firmware that lets them connect to, access, and hack devices and machines by just touching them.",
     factions: ["The Black Hand"],
-    multipliers: { strength: 1.15, dexterity: 1.15, hacking: 1.1, hacking_speed: 1.02, hacking_money: 1.1 },
+    multipliers: {
+      strength: 1.15,
+      dexterity: 1.15,
+      hacking: 1.1,
+      hacking_speed: 1.02,
+      hacking_money: 1.1,
+    },
   },
   TheRedPill: {
     name: "The Red Pill",
@@ -1292,7 +1403,7 @@ export const AUGMENTATION_DATA: Record<string, AugmentationData> = {
     multipliers: {},
   },
   TrickeryOfHermes: {
-    name: "Trickery of Hermes",
+    name: "SoA - Trickery of Hermes",
     repCost: 10000,
     moneyCost: 1000000,
     info: "Penta-dynamo-neurovascular-valve inserted in the carpal ligament, enhances dexterity.",
@@ -1306,7 +1417,7 @@ export const AUGMENTATION_DATA: Record<string, AugmentationData> = {
     repCost: 362500,
     moneyCost: 5000000000,
     info: "An experimental nanobot injection. Its unstable nature leads to unpredictable results based on your circadian rhythm.",
-    stats: "This augmentation has randomized effects that change every hour. Effects can include boosts to hacking, combat stats, charisma, hacknet, work/faction rep, or crime stats.",
+    stats: "Randomly provides different bonuses each day based on time.",
     factions: ["Speakers for the Dead"],
     multipliers: {},
   },
@@ -1317,7 +1428,11 @@ export const AUGMENTATION_DATA: Record<string, AugmentationData> = {
     info: "A synthetic symbiotic virus that is injected into human brain tissue. The Vangelis virus heightens the senses and focus of its host while also enhancing their intuition.",
     isSpecial: true,
     factions: ["Bladeburners"],
-    multipliers: { dexterity_exp: 1.1, bladeburner_analysis: 1.1, bladeburner_success_chance: 1.04 },
+    multipliers: {
+      dexterity_exp: 1.1,
+      bladeburner_analysis: 1.1,
+      bladeburner_success_chance: 1.04,
+    },
   },
   VangelisVirus3: {
     name: "Vangelis Virus 3.0",
@@ -1326,11 +1441,16 @@ export const AUGMENTATION_DATA: Record<string, AugmentationData> = {
     info: "An improved version of Vangelis, a synthetic symbiotic virus that is injected into human brain tissue. On top of the benefits of the original virus, this also grants accelerated healing and enhanced reflexes.",
     isSpecial: true,
     factions: ["Bladeburners"],
-    multipliers: { defense_exp: 1.1, dexterity_exp: 1.1, bladeburner_analysis: 1.15, bladeburner_success_chance: 1.05 },
+    multipliers: {
+      defense_exp: 1.1,
+      dexterity_exp: 1.1,
+      bladeburner_analysis: 1.15,
+      bladeburner_success_chance: 1.05,
+    },
     prereqs: ["VangelisVirus"],
   },
   WKSharmonizer: {
-    name: "WKS Harmonizer",
+    name: "SoA - phyzical WKS harmonizer",
     repCost: 10000,
     moneyCost: 1000000,
     info: "A copy of the WKS harmonizer from the MIA leader of the Shadows of Anarchy injects *Γ-based cells that provide general enhancement to the body.",
@@ -1348,7 +1468,7 @@ export const AUGMENTATION_DATA: Record<string, AugmentationData> = {
     multipliers: { agility: 1.05, dexterity: 1.05 },
   },
   WisdomOfAthena: {
-    name: "Wisdom of Athena",
+    name: "SoA - Wisdom of Athena",
     repCost: 10000,
     moneyCost: 1000000,
     info: "A connective brain implant to SASHA that focuses on pattern recognition and predictive templating.",
@@ -1379,7 +1499,7 @@ export const AUGMENTATION_DATA: Record<string, AugmentationData> = {
     },
   },
   ZOE: {
-    name: "Z.O.E.",
+    name: "Z.O.Ë.",
     repCost: Infinity,
     moneyCost: 1000000000000,
     info: "Zoë's Omnicerebrum Ënhancer for sleeves inserts an omnicerebrum into your sleeve. An omnicerebrum is a near perfect simulation of the human brain, allowing it to take advantage of a larger variety of augments. But you should know about this, BitRunner, since you have one of these yourself!",
@@ -1389,33 +1509,3 @@ export const AUGMENTATION_DATA: Record<string, AugmentationData> = {
     multipliers: {},
   },
 };
-
-// Helper functions for filtering augmentations by effect type
-export function getAugmentationsByEffect(
-  effectType: keyof AugmentationMultipliers,
-  minMultiplier: number = 1
-): AugmentationData[] {
-  return Object.values(AUGMENTATION_DATA).filter(
-    (aug) => aug.multipliers[effectType] !== undefined && aug.multipliers[effectType]! >= minMultiplier
-  );
-}
-
-export function getAugmentationsByFaction(factionName: string): AugmentationData[] {
-  return Object.values(AUGMENTATION_DATA).filter((aug) => aug.factions.includes(factionName));
-}
-
-export function getAugmentationsByCategory(
-  category: "hacking" | "combat" | "social" | "hacknet" | "bladeburner" | "crime"
-): AugmentationData[] {
-  const categoryFilters: Record<string, (keyof AugmentationMultipliers)[]> = {
-    hacking: ["hacking", "hacking_exp", "hacking_chance", "hacking_speed", "hacking_money", "hacking_grow"],
-    combat: ["strength", "defense", "dexterity", "agility", "strength_exp", "defense_exp", "dexterity_exp", "agility_exp"],
-    social: ["charisma", "charisma_exp", "company_rep", "faction_rep", "work_money"],
-    hacknet: ["hacknet_node_money", "hacknet_node_purchase_cost", "hacknet_node_ram_cost", "hacknet_node_core_cost", "hacknet_node_level_cost"],
-    bladeburner: ["bladeburner_max_stamina", "bladeburner_stamina_gain", "bladeburner_analysis", "bladeburner_success_chance"],
-    crime: ["crime_money", "crime_success"],
-  };
-
-  const effects = categoryFilters[category];
-  return Object.values(AUGMENTATION_DATA).filter((aug) => effects.some((effect) => aug.multipliers[effect] !== undefined));
-}
