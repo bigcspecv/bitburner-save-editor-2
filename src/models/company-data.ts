@@ -351,3 +351,17 @@ export const COMPANY_CITY_MAP: Record<string, string> = {
   "Omnia Cybersystems": "Volhaven",
   "SysCore Securities": "Volhaven",
 };
+
+// Companies that have associated factions
+export const COMPANIES_WITH_FACTIONS = new Set([
+  "ECorp",
+  "MegaCorp",
+  "Bachman & Associates",
+  "Blade Industries",
+  "NWO",
+  "Clarke Incorporated",
+  "OmniTek Incorporated",
+  "Four Sigma",
+  "KuaiGong International",
+  "Fulcrum Technologies",
+]);

@@ -1,15 +1,16 @@
 import { useCallback, useMemo, useState } from 'react';
 import { Card, Input, NumberInput, Select, Button, ResetAction } from '../ui';
 import { useSaveStore } from '../../store/save-store';
-import { ALL_COMPANIES, COMPANY_JOBS, COMPANY_CITY_MAP } from '../../models/company-data';
+import { ALL_COMPANIES, COMPANY_JOBS, COMPANY_CITY_MAP, COMPANIES_WITH_FACTIONS } from '../../models/company-data';
 
 type CityFilter = 'all' | 'Aevum' | 'Chongqing' | 'Ishima' | 'New Tokyo' | 'Sector-12' | 'Volhaven';
-type StatusFilterKey = 'employed' | 'reputation' | 'changed';
+type StatusFilterKey = 'employed' | 'reputation' | 'changed' | 'hasFaction';
 
 type FiltersState = {
   employed: boolean;
   reputation: boolean;
   changed: boolean;
+  hasFaction: boolean;
   city: CityFilter;
 };
 
@@ -17,6 +18,7 @@ const statusFilterButtons: Array<{ key: StatusFilterKey; label: string }> = [
   { key: 'employed', label: 'Employed Only' },
   { key: 'reputation', label: 'Has Reputation' },
   { key: 'changed', label: 'Modified Only' },
+  { key: 'hasFaction', label: 'Has Faction' },
 ];
 
 const cityOptions = [
@@ -47,6 +49,7 @@ export function CompaniesSection() {
     employed: false,
     reputation: false,
     changed: false,
+    hasFaction: false,
     city: 'all',
   });
 
@@ -96,6 +99,7 @@ export function CompaniesSection() {
       if (filters.employed && !company.currentJob) return false;
       if (filters.reputation && company.playerReputation === 0) return false;
       if (filters.changed && !company.hasChanged) return false;
+      if (filters.hasFaction && !COMPANIES_WITH_FACTIONS.has(company.name)) return false;
 
       // City filter
       if (filters.city !== 'all' && company.city !== filters.city) return false;
@@ -114,11 +118,12 @@ export function CompaniesSection() {
       employed: false,
       reputation: false,
       changed: false,
+      hasFaction: false,
       city: 'all',
     });
   }, []);
 
-  const hasActiveFilters = search !== '' || filters.employed || filters.reputation || filters.changed || filters.city !== 'all';
+  const hasActiveFilters = search !== '' || filters.employed || filters.reputation || filters.changed || filters.hasFaction || filters.city !== 'all';
 
   if (isLoading) {
     return (
