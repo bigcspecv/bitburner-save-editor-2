@@ -48,6 +48,9 @@ export type { ResetActionProps } from './ResetAction';
 export { Tooltip } from './Tooltip';
 export type { TooltipProps } from './Tooltip';
 
+export { ColorInput } from './ColorInput';
+export type { ColorInputProps } from './ColorInput';
+
 export {
   SecurityWorkIcon,
   HackingWorkIcon,

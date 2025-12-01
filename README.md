@@ -197,10 +197,10 @@ The editor is organized by **gameplay concepts**, not save file structure:
   - [ ] Stanek's Gift
   - [ ] Go minigame
   - [ ] Infiltrations
-- [ ] Settings section
+- [x] Settings section
   - [x] General settings
   - [x] Script editor settings
-  - [ ] Theme customization
+  - [x] Theme customization
 - [ ] Utilities
   - [ ] Aliases
   - [ ] Global aliases

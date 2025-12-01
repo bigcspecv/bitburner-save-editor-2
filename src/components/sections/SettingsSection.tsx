@@ -1,7 +1,193 @@
-import { Card, Tabs, Checkbox, NumberInput, Input, ResetAction, Select } from '../ui';
+import { useState } from 'react';
+import { Card, Tabs, Checkbox, NumberInput, Input, ResetAction, Select, ColorInput } from '../ui';
 import type { SelectOption } from '../ui/Select';
 import { useSaveStore } from '../../store/save-store';
 import type { SettingsSave } from '../../models/schemas/misc';
+
+// Theme interface matching Bitburner's ITheme
+interface ITheme {
+  primarylight: string;
+  primary: string;
+  primarydark: string;
+  successlight: string;
+  success: string;
+  successdark: string;
+  errorlight: string;
+  error: string;
+  errordark: string;
+  secondarylight: string;
+  secondary: string;
+  secondarydark: string;
+  warninglight: string;
+  warning: string;
+  warningdark: string;
+  infolight: string;
+  info: string;
+  infodark: string;
+  welllight: string;
+  well: string;
+  white: string;
+  black: string;
+  hp: string;
+  money: string;
+  hack: string;
+  combat: string;
+  cha: string;
+  int: string;
+  rep: string;
+  disabled: string;
+  backgroundprimary: string;
+  backgroundsecondary: string;
+  button: string;
+  maplocation: string;
+  bnlvl0: string;
+  bnlvl1: string;
+  bnlvl2: string;
+  bnlvl3: string;
+}
+
+// Default theme from Bitburner source
+const DEFAULT_THEME: ITheme = {
+  primarylight: '#0f0',
+  primary: '#0c0',
+  primarydark: '#090',
+  successlight: '#0f0',
+  success: '#0c0',
+  successdark: '#090',
+  errorlight: '#f00',
+  error: '#c00',
+  errordark: '#900',
+  secondarylight: '#AAA',
+  secondary: '#888',
+  secondarydark: '#666',
+  warninglight: '#ff0',
+  warning: '#cc0',
+  warningdark: '#990',
+  infolight: '#69f',
+  info: '#36c',
+  infodark: '#039',
+  welllight: '#444',
+  well: '#222',
+  white: '#fff',
+  black: '#000',
+  hp: '#dd3434',
+  money: '#ffd700',
+  hack: '#adff2f',
+  combat: '#faffdf',
+  cha: '#a671d1',
+  int: '#6495ed',
+  rep: '#faffdf',
+  disabled: '#66cfbc',
+  backgroundprimary: '#000',
+  backgroundsecondary: '#000',
+  button: '#333',
+  maplocation: '#ffffff',
+  bnlvl0: '#ffff00',
+  bnlvl1: '#ff0000',
+  bnlvl2: '#48d1cc',
+  bnlvl3: '#0000ff',
+};
+
+// Predefined theme presets from Bitburner source
+const PREDEFINED_THEMES: Record<string, { name: string; colors: ITheme }> = {
+  default: {
+    name: 'Default',
+    colors: DEFAULT_THEME,
+  },
+  dracula: {
+    name: 'Dracula',
+    colors: {
+      primarylight: '#7082B8',
+      primary: '#F8F8F2',
+      primarydark: '#FF79C6',
+      successlight: '#0f0',
+      success: '#0c0',
+      successdark: '#090',
+      errorlight: '#FD4545',
+      error: '#FF2D2D',
+      errordark: '#C62424',
+      secondarylight: '#AAA',
+      secondary: '#8BE9FD',
+      secondarydark: '#666',
+      warninglight: '#FFC281',
+      warning: '#FFB86C',
+      warningdark: '#E6A055',
+      infolight: '#A0A0FF',
+      info: '#7070FF',
+      infodark: '#4040FF',
+      welllight: '#44475A',
+      well: '#363948',
+      white: '#fff',
+      black: '#282A36',
+      hp: '#D34448',
+      money: '#50FA7B',
+      hack: '#F1FA8C',
+      combat: '#BD93F9',
+      cha: '#FF79C6',
+      int: '#6495ed',
+      rep: '#faffdf',
+      disabled: '#66cfbc',
+      backgroundprimary: '#282A36',
+      backgroundsecondary: '#21222C',
+      button: '#21222C',
+      maplocation: '#ffffff',
+      bnlvl0: '#ffff00',
+      bnlvl1: '#ff0000',
+      bnlvl2: '#48d1cc',
+      bnlvl3: '#0000ff',
+    },
+  },
+  monokai: {
+    name: "Monokai'ish",
+    colors: {
+      primarylight: '#FFF',
+      primary: '#F8F8F2',
+      primarydark: '#FAFAEB',
+      successlight: '#ADE146',
+      success: '#A6E22E',
+      successdark: '#98E104',
+      errorlight: '#FF69A0',
+      error: '#F92672',
+      errordark: '#D10F56',
+      secondarylight: '#AAA',
+      secondary: '#888',
+      secondarydark: '#666',
+      warninglight: '#E1D992',
+      warning: '#E6DB74',
+      warningdark: '#EDDD54',
+      infolight: '#92E1F1',
+      info: '#66D9EF',
+      infodark: '#31CDED',
+      welllight: '#444',
+      well: '#222',
+      white: '#fff',
+      black: '#000',
+      hp: '#F92672',
+      money: '#E6DB74',
+      hack: '#A6E22E',
+      combat: '#75715E',
+      cha: '#AE81FF',
+      int: '#66D9EF',
+      rep: '#E69F66',
+      disabled: '#66cfbc',
+      backgroundprimary: '#272822',
+      backgroundsecondary: '#1B1C18',
+      button: '#333',
+      maplocation: '#ffffff',
+      bnlvl0: '#ffff00',
+      bnlvl1: '#ff0000',
+      bnlvl2: '#48d1cc',
+      bnlvl3: '#0000ff',
+    },
+  },
+};
+
+const THEME_PRESET_OPTIONS: SelectOption[] = [
+  { value: '', label: 'Select Preset' },
+  { value: 'default', label: 'Default' },
+  { value: 'dracula', label: 'Dracula' },
+  { value: 'monokai', label: "Monokai'ish" },
+];
 
 // Type guard for SettingsSave
 function isSettingsSave(value: unknown): value is SettingsSave {
@@ -87,6 +273,330 @@ function SettingGroup({ title, children }: SettingGroupProps) {
         {title}
       </h4>
       <div className="space-y-1">{children}</div>
+    </div>
+  );
+}
+
+// Color row component for theme editor
+interface ColorRowProps {
+  label: string;
+  colorKey: keyof ITheme;
+  theme: Partial<ITheme>;
+  defaultTheme: ITheme;
+  onColorChange: (key: keyof ITheme, value: string) => void;
+}
+
+function ColorRow({ label, colorKey, theme, defaultTheme, onColorChange }: ColorRowProps) {
+  const currentValue = theme[colorKey] ?? defaultTheme[colorKey];
+  const isModified = theme[colorKey] !== undefined && theme[colorKey] !== defaultTheme[colorKey];
+
+  return (
+    <div className="flex items-center justify-between py-1.5 border-b border-terminal-dim/20 last:border-b-0 gap-2">
+      <div className="flex items-center gap-1 min-w-0 flex-shrink overflow-hidden">
+        <span className="text-terminal-primary text-sm truncate">{label}</span>
+        {isModified && (
+          <span className="text-yellow-500 text-xs flex-shrink-0">*</span>
+        )}
+      </div>
+      <ColorInput
+        value={currentValue}
+        onChange={(value) => onColorChange(colorKey, value)}
+      />
+    </div>
+  );
+}
+
+// Color group component
+interface ColorGroupProps {
+  title: string;
+  colors: { key: keyof ITheme; label: string }[];
+  theme: Partial<ITheme>;
+  defaultTheme: ITheme;
+  onColorChange: (key: keyof ITheme, value: string) => void;
+}
+
+function ColorGroup({ title, colors, theme, defaultTheme, onColorChange }: ColorGroupProps) {
+  return (
+    <div className="mb-6 last:mb-0 min-w-0 overflow-hidden">
+      <h4 className="text-terminal-secondary text-xs uppercase tracking-wide mb-2 border-b border-terminal-dim pb-1">
+        {title}
+      </h4>
+      <div className="space-y-0">
+        {colors.map(({ key, label }) => (
+          <ColorRow
+            key={key}
+            label={label}
+            colorKey={key}
+            theme={theme}
+            defaultTheme={defaultTheme}
+            onColorChange={onColorChange}
+          />
+        ))}
+      </div>
+    </div>
+  );
+}
+
+// Theme preview component
+interface ThemePreviewProps {
+  theme: Partial<ITheme>;
+  defaultTheme: ITheme;
+}
+
+function ThemePreview({ theme, defaultTheme }: ThemePreviewProps) {
+  const getColor = (key: keyof ITheme) => theme[key] ?? defaultTheme[key];
+
+  return (
+    <div
+      className="border border-terminal-dim rounded p-4 mb-6"
+      style={{ backgroundColor: getColor('backgroundprimary') }}
+    >
+      <div className="text-xs uppercase tracking-wide mb-3 opacity-70" style={{ color: getColor('secondary') }}>
+        Theme Preview
+      </div>
+      <div className="space-y-2">
+        {/* Primary colors */}
+        <div className="flex items-center gap-2">
+          <span style={{ color: getColor('primarylight') }}>Primary Light</span>
+          <span style={{ color: getColor('primary') }}>Primary</span>
+          <span style={{ color: getColor('primarydark') }}>Primary Dark</span>
+        </div>
+        {/* Status colors */}
+        <div className="flex items-center gap-4">
+          <span style={{ color: getColor('success') }}>Success</span>
+          <span style={{ color: getColor('warning') }}>Warning</span>
+          <span style={{ color: getColor('error') }}>Error</span>
+          <span style={{ color: getColor('info') }}>Info</span>
+        </div>
+        {/* Game stats */}
+        <div className="flex items-center gap-4 text-sm">
+          <span style={{ color: getColor('hp') }}>HP</span>
+          <span style={{ color: getColor('money') }}>Money</span>
+          <span style={{ color: getColor('hack') }}>Hack</span>
+          <span style={{ color: getColor('combat') }}>Combat</span>
+          <span style={{ color: getColor('cha') }}>Cha</span>
+          <span style={{ color: getColor('int') }}>Int</span>
+        </div>
+        {/* Button preview */}
+        <div className="mt-2">
+          <span
+            className="px-3 py-1 text-sm rounded"
+            style={{
+              backgroundColor: getColor('button'),
+              color: getColor('primary'),
+              border: `1px solid ${getColor('primary')}`
+            }}
+          >
+            Button
+          </span>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// Theme tab content component
+interface ThemeTabContentProps {
+  settings: SettingsSave | undefined;
+  updateSettings: (updates: Partial<SettingsSave>) => void;
+  resetSettings: () => void;
+  hasSettingsChanges: () => boolean;
+}
+
+function ThemeTabContent({ settings, updateSettings, resetSettings, hasSettingsChanges }: ThemeTabContentProps) {
+  // Get current theme from settings, default to empty object
+  const currentTheme = (settings?.theme ?? {}) as Partial<ITheme>;
+
+  // Track which preset is currently selected (for reset functionality)
+  const [selectedPreset, setSelectedPreset] = useState<string>('');
+
+  // Get the base theme to compare against (selected preset or default)
+  const baseTheme: Partial<ITheme> = selectedPreset && PREDEFINED_THEMES[selectedPreset]
+    ? PREDEFINED_THEMES[selectedPreset].colors
+    : DEFAULT_THEME;
+
+  const handleColorChange = (key: keyof ITheme, value: string) => {
+    const newTheme = { ...currentTheme, [key]: value };
+    updateSettings({ theme: newTheme });
+  };
+
+  const handlePresetChange = (presetKey: string | number) => {
+    if (!presetKey || typeof presetKey !== 'string') return;
+    const preset = PREDEFINED_THEMES[presetKey];
+    if (preset) {
+      setSelectedPreset(presetKey);
+      updateSettings({ theme: { ...preset.colors } });
+    }
+  };
+
+  const handleResetTheme = () => {
+    // Reset to the selected preset's colors (or default if none selected)
+    if (selectedPreset && PREDEFINED_THEMES[selectedPreset]) {
+      updateSettings({ theme: { ...PREDEFINED_THEMES[selectedPreset].colors } });
+    } else {
+      updateSettings({ theme: { ...DEFAULT_THEME } });
+    }
+  };
+
+  // Check if theme differs from base theme (selected preset or default)
+  const hasThemeChanges = JSON.stringify(currentTheme) !== JSON.stringify(baseTheme);
+
+  // Color groups organized by category
+  const colorGroups: { title: string; colors: { key: keyof ITheme; label: string }[] }[] = [
+    {
+      title: 'Primary Colors',
+      colors: [
+        { key: 'primarylight', label: 'Primary Light' },
+        { key: 'primary', label: 'Primary' },
+        { key: 'primarydark', label: 'Primary Dark' },
+      ],
+    },
+    {
+      title: 'Success Colors',
+      colors: [
+        { key: 'successlight', label: 'Success Light' },
+        { key: 'success', label: 'Success' },
+        { key: 'successdark', label: 'Success Dark' },
+      ],
+    },
+    {
+      title: 'Error Colors',
+      colors: [
+        { key: 'errorlight', label: 'Error Light' },
+        { key: 'error', label: 'Error' },
+        { key: 'errordark', label: 'Error Dark' },
+      ],
+    },
+    {
+      title: 'Secondary Colors',
+      colors: [
+        { key: 'secondarylight', label: 'Secondary Light' },
+        { key: 'secondary', label: 'Secondary' },
+        { key: 'secondarydark', label: 'Secondary Dark' },
+      ],
+    },
+    {
+      title: 'Warning Colors',
+      colors: [
+        { key: 'warninglight', label: 'Warning Light' },
+        { key: 'warning', label: 'Warning' },
+        { key: 'warningdark', label: 'Warning Dark' },
+      ],
+    },
+    {
+      title: 'Info Colors',
+      colors: [
+        { key: 'infolight', label: 'Info Light' },
+        { key: 'info', label: 'Info' },
+        { key: 'infodark', label: 'Info Dark' },
+      ],
+    },
+    {
+      title: 'UI Colors',
+      colors: [
+        { key: 'welllight', label: 'Well Light' },
+        { key: 'well', label: 'Well' },
+        { key: 'white', label: 'White' },
+        { key: 'black', label: 'Black' },
+        { key: 'disabled', label: 'Disabled' },
+      ],
+    },
+    {
+      title: 'Background & Buttons',
+      colors: [
+        { key: 'backgroundprimary', label: 'Background Primary' },
+        { key: 'backgroundsecondary', label: 'Background Secondary' },
+        { key: 'button', label: 'Button' },
+        { key: 'maplocation', label: 'Map Location' },
+      ],
+    },
+    {
+      title: 'Game Stats',
+      colors: [
+        { key: 'hp', label: 'HP' },
+        { key: 'money', label: 'Money' },
+        { key: 'hack', label: 'Hacking' },
+        { key: 'combat', label: 'Combat' },
+        { key: 'cha', label: 'Charisma' },
+        { key: 'int', label: 'Intelligence' },
+        { key: 'rep', label: 'Reputation' },
+      ],
+    },
+    {
+      title: 'BitNode Levels',
+      colors: [
+        { key: 'bnlvl0', label: 'Level 0 (None)' },
+        { key: 'bnlvl1', label: 'Level 1' },
+        { key: 'bnlvl2', label: 'Level 2' },
+        { key: 'bnlvl3', label: 'Level 3+' },
+      ],
+    },
+  ];
+
+  // Get the name of the preset for display
+  const presetName = selectedPreset && PREDEFINED_THEMES[selectedPreset]
+    ? PREDEFINED_THEMES[selectedPreset].name
+    : 'Default';
+
+  return (
+    <div className="space-y-6">
+      {/* Header with Reset */}
+      <div className="flex items-center justify-between mb-4">
+        <h3 className="text-terminal-secondary text-sm uppercase tracking-wide">
+          &gt; Theme Colors
+          {selectedPreset && (
+            <span className="text-terminal-dim ml-2">({presetName})</span>
+          )}
+        </h3>
+        <div className="flex items-center gap-4">
+          {hasThemeChanges && (
+            <button
+              onClick={handleResetTheme}
+              className="text-xs text-yellow-500 hover:text-yellow-400 underline"
+            >
+              Reset to {presetName}
+            </button>
+          )}
+          <ResetAction
+            hasChanges={hasSettingsChanges()}
+            onReset={resetSettings}
+            title="Reset All Settings"
+          />
+        </div>
+      </div>
+
+      {/* Preset Selector */}
+      <div className="mb-6">
+        <SettingRow
+          label="Theme Preset"
+          description="Select a predefined color scheme. Modifying colors will show a reset option."
+        >
+          <Select
+            options={THEME_PRESET_OPTIONS}
+            value={selectedPreset}
+            onChange={handlePresetChange}
+            showSearch={false}
+            className="w-48"
+          />
+        </SettingRow>
+      </div>
+
+      {/* Theme Preview */}
+      <ThemePreview theme={currentTheme} defaultTheme={DEFAULT_THEME} />
+
+      {/* Color Groups in 2-column layout */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-x-8 gap-y-6 overflow-hidden">
+        {colorGroups.map((group) => (
+          <ColorGroup
+            key={group.title}
+            title={group.title}
+            colors={group.colors}
+            theme={currentTheme}
+            defaultTheme={DEFAULT_THEME}
+            onColorChange={handleColorChange}
+          />
+        ))}
+      </div>
     </div>
   );
 }
@@ -727,36 +1237,19 @@ export function SettingsSection() {
     {
       id: 'theme',
       label: 'Theme',
-      notImplemented: true,
-      content: (
-        <Card title="Theme Settings" subtitle="Not yet implemented">
+      content: hasSettings ? (
+        <ThemeTabContent
+          settings={settings}
+          updateSettings={updateSettings}
+          resetSettings={resetSettings}
+          hasSettingsChanges={hasSettingsChanges}
+        />
+      ) : (
+        <Card title="Theme Settings" subtitle="No settings data available">
           <p className="text-terminal-dim">
-            {hasSettings
-              ? 'Theme data exists but color editors require additional implementation.'
-              : 'No settings data in save file.'}
+            This save file does not contain settings data. Settings are typically created when
+            you modify options in the game.
           </p>
-          <ul className="mt-3 space-y-1 text-sm text-terminal-secondary">
-            <li className="flex items-start gap-2">
-              <span className="text-terminal-primary">•</span>
-              <span>Primary, secondary, and accent colors</span>
-            </li>
-            <li className="flex items-start gap-2">
-              <span className="text-terminal-primary">•</span>
-              <span>Background and surface colors</span>
-            </li>
-            <li className="flex items-start gap-2">
-              <span className="text-terminal-primary">•</span>
-              <span>Success, warning, error, and info colors</span>
-            </li>
-            <li className="flex items-start gap-2">
-              <span className="text-terminal-primary">•</span>
-              <span>HP, money, hack, combat, and charisma colors</span>
-            </li>
-            <li className="flex items-start gap-2">
-              <span className="text-terminal-primary">•</span>
-              <span>Editor theme colors</span>
-            </li>
-          </ul>
         </Card>
       ),
     },
@@ -850,11 +1343,62 @@ export function SettingsSection() {
                   {hasSettings ? 'Configurable' : 'No Data'}
                 </span>
               </div>
-              {hasSettings && getSetting(settings, 'theme', null) && (
-                <div className="flex justify-between">
-                  <span className="text-terminal-dim">Custom Theme:</span>
-                  <span className="text-terminal-secondary">Yes</span>
-                </div>
+              {hasSettings && (
+                <>
+                  <div className="flex justify-between">
+                    <span className="text-terminal-dim">Custom Theme:</span>
+                    <span className="text-terminal-secondary">
+                      {getSetting(settings, 'theme', null) ? 'Yes' : 'No'}
+                    </span>
+                  </div>
+                  {/* Color preview swatches */}
+                  {(() => {
+                    const theme = (getSetting(settings, 'theme', null) ?? {}) as Partial<ITheme>;
+                    const getColor = (key: keyof ITheme) => theme[key] ?? DEFAULT_THEME[key];
+                    return (
+                      <div className="mt-2">
+                        <span className="text-terminal-dim text-xs">Colors:</span>
+                        <div className="flex gap-1 mt-1">
+                          <div
+                            className="w-4 h-4 rounded-sm border border-terminal-dim/50"
+                            style={{ backgroundColor: getColor('primary') }}
+                            title="Primary"
+                          />
+                          <div
+                            className="w-4 h-4 rounded-sm border border-terminal-dim/50"
+                            style={{ backgroundColor: getColor('success') }}
+                            title="Success"
+                          />
+                          <div
+                            className="w-4 h-4 rounded-sm border border-terminal-dim/50"
+                            style={{ backgroundColor: getColor('error') }}
+                            title="Error"
+                          />
+                          <div
+                            className="w-4 h-4 rounded-sm border border-terminal-dim/50"
+                            style={{ backgroundColor: getColor('warning') }}
+                            title="Warning"
+                          />
+                          <div
+                            className="w-4 h-4 rounded-sm border border-terminal-dim/50"
+                            style={{ backgroundColor: getColor('info') }}
+                            title="Info"
+                          />
+                          <div
+                            className="w-4 h-4 rounded-sm border border-terminal-dim/50"
+                            style={{ backgroundColor: getColor('hp') }}
+                            title="HP"
+                          />
+                          <div
+                            className="w-4 h-4 rounded-sm border border-terminal-dim/50"
+                            style={{ backgroundColor: getColor('money') }}
+                            title="Money"
+                          />
+                        </div>
+                      </div>
+                    );
+                  })()}
+                </>
               )}
             </div>
           </div>
