@@ -5,6 +5,7 @@ export { AugmentationsSection } from './AugmentationsSection';
 export { FactionsSection } from './FactionsSection';
 export { CompaniesSection } from './CompaniesSection';
 export { ServersSection } from './ServersSection';
+export { ScriptsSection } from './ScriptsSection';
 export { GangsSection } from './GangsSection';
 export { HacknetSection } from './HacknetSection';
 export { ProgressionSection } from './ProgressionSection';

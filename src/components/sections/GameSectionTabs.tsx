@@ -9,6 +9,7 @@ import { GangsSection } from './GangsSection';
 import { HacknetSection } from './HacknetSection';
 import { PlayerSection } from './PlayerSection';
 import { ProgressionSection } from './ProgressionSection';
+import { ScriptsSection } from './ScriptsSection';
 import { ServersSection } from './ServersSection';
 import { SettingsSection } from './SettingsSection';
 import { SpecialSection } from './SpecialSection';
@@ -41,6 +42,7 @@ export function GameSectionTabs({ className }: GameSectionTabsProps) {
     { id: 'factions', label: 'Factions', content: <FactionsSection />, hasChanges: hasFactionChanges() },
     { id: 'companies', label: 'Companies', content: <CompaniesSection />, hasChanges: hasCompanyChanges() },
     { id: 'servers', label: 'Servers', content: <ServersSection />, hasChanges: hasServerChanges() },
+    { id: 'scripts', label: 'Scripts', content: <ScriptsSection /> },
     { id: 'gangs', label: 'Gangs', content: <GangsSection />, hasChanges: hasGangChanges() },
     { id: 'hacknet', label: 'Hacknet', content: <HacknetSection /> },
     { id: 'progression', label: 'Progression', content: <ProgressionSection /> },
