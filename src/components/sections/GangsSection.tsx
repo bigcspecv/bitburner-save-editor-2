@@ -28,30 +28,73 @@ export function GangsSection() {
       id: 'members',
       label: 'Members',
       content: (
-        <div className="text-terminal-dim text-sm p-4 border border-terminal-primary/30">
-          <p className="text-terminal-secondary uppercase mb-2">&gt; NOT IMPLEMENTED</p>
-          <p>Gang member management will be added here.</p>
-        </div>
+        <Card title="Members" subtitle="Navigation stub — editor UI coming soon">
+          <p className="text-terminal-dim">Manage your gang members and their assignments.</p>
+          <ul className="mt-3 space-y-1 text-sm text-terminal-secondary">
+            <li className="flex items-start gap-2">
+              <span className="text-terminal-primary">•</span>
+              <span>Add/remove gang members</span>
+            </li>
+            <li className="flex items-start gap-2">
+              <span className="text-terminal-primary">•</span>
+              <span>Edit member stats (hack, str, def, dex, agi, cha)</span>
+            </li>
+            <li className="flex items-start gap-2">
+              <span className="text-terminal-primary">•</span>
+              <span>Assign tasks to members</span>
+            </li>
+            <li className="flex items-start gap-2">
+              <span className="text-terminal-primary">•</span>
+              <span>View member ascension multipliers</span>
+            </li>
+          </ul>
+        </Card>
       ),
     },
     {
       id: 'equipment',
       label: 'Equipment',
       content: (
-        <div className="text-terminal-dim text-sm p-4 border border-terminal-primary/30">
-          <p className="text-terminal-secondary uppercase mb-2">&gt; NOT IMPLEMENTED</p>
-          <p>Gang equipment features will be added here.</p>
-        </div>
+        <Card title="Equipment" subtitle="Navigation stub — editor UI coming soon">
+          <p className="text-terminal-dim">View and manage equipment owned by gang members.</p>
+          <ul className="mt-3 space-y-1 text-sm text-terminal-secondary">
+            <li className="flex items-start gap-2">
+              <span className="text-terminal-primary">•</span>
+              <span>View equipped weapons, armor, vehicles, and rootkits</span>
+            </li>
+            <li className="flex items-start gap-2">
+              <span className="text-terminal-primary">•</span>
+              <span>Add/remove equipment from members</span>
+            </li>
+            <li className="flex items-start gap-2">
+              <span className="text-terminal-primary">•</span>
+              <span>View augmentations installed on members</span>
+            </li>
+          </ul>
+        </Card>
       ),
     },
     {
       id: 'territory',
       label: 'Territory',
       content: (
-        <div className="text-terminal-dim text-sm p-4 border border-terminal-primary/30">
-          <p className="text-terminal-secondary uppercase mb-2">&gt; NOT IMPLEMENTED</p>
-          <p>Territory warfare features will be added here.</p>
-        </div>
+        <Card title="Territory" subtitle="Navigation stub — editor UI coming soon">
+          <p className="text-terminal-dim">View and edit territory control and rival gang stats.</p>
+          <ul className="mt-3 space-y-1 text-sm text-terminal-secondary">
+            <li className="flex items-start gap-2">
+              <span className="text-terminal-primary">•</span>
+              <span>View territory percentage per gang</span>
+            </li>
+            <li className="flex items-start gap-2">
+              <span className="text-terminal-primary">•</span>
+              <span>Edit gang power levels</span>
+            </li>
+            <li className="flex items-start gap-2">
+              <span className="text-terminal-primary">•</span>
+              <span>View win chances against rival gangs</span>
+            </li>
+          </ul>
+        </Card>
       ),
     },
   ];
