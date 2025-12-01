@@ -982,6 +982,17 @@ export const useSaveStore = create<SaveStoreState>((set, get) => ({
         } else {
           sourceFiles.data.splice(insertIndex, 0, [bitNodeNumber, level]);
         }
+
+        // SF9 changes Hacknet from Nodes to Servers - the data structures are incompatible.
+        // When SF9 is added, we must clear hacknetNodes because HacknetNode objects
+        // are not valid when hasHacknetServers() returns true.
+        // The game will let the player purchase new Hacknet Servers.
+        if (bitNodeNumber === 9) {
+          draft.PlayerSave.data.hacknetNodes = [];
+          // Reset hash manager since there are no servers
+          draft.PlayerSave.data.hashManager.data.hashes = 0;
+          draft.PlayerSave.data.hashManager.data.capacity = 0;
+        }
       }
     });
   },
@@ -992,13 +1003,40 @@ export const useSaveStore = create<SaveStoreState>((set, get) => ({
       const existingIndex = sourceFiles.data.findIndex(([bn]) => bn === bitNodeNumber);
       if (existingIndex !== -1) {
         sourceFiles.data.splice(existingIndex, 1);
+
+        // SF9 changes Hacknet from Nodes to Servers - the data structures are incompatible.
+        // When SF9 is removed (and player is not in BN9), hacknetNodes would contain
+        // hostname strings instead of HacknetNode objects, which causes errors.
+        // Clear the array so the player can purchase new Hacknet Nodes.
+        if (bitNodeNumber === 9 && draft.PlayerSave.data.bitNodeN !== 9) {
+          draft.PlayerSave.data.hacknetNodes = [];
+        }
       }
     });
   },
 
   updateBitNodeN(bitNodeNumber) {
     get().mutateCurrentSave((draft) => {
+      const previousBitNode = draft.PlayerSave.data.bitNodeN;
       draft.PlayerSave.data.bitNodeN = bitNodeNumber;
+
+      // Check if SF9 access changed due to BitNode change
+      // canAccessBitNodeFeature(9) = Player.bitNodeN === 9 || Player.activeSourceFileLvl(9) > 0
+      const hasSF9 = draft.PlayerSave.data.sourceFiles.data.some(([bn]) => bn === 9);
+      const wasInBN9 = previousBitNode === 9;
+      const isInBN9 = bitNodeNumber === 9;
+
+      // If entering BN9 without SF9, clear hacknetNodes (HacknetNode -> HacknetServer)
+      if (!wasInBN9 && isInBN9 && !hasSF9) {
+        draft.PlayerSave.data.hacknetNodes = [];
+        draft.PlayerSave.data.hashManager.data.hashes = 0;
+        draft.PlayerSave.data.hashManager.data.capacity = 0;
+      }
+      // If leaving BN9 without SF9, hacknetNodes should stay empty or be cleared
+      // (would contain hostnames from HacknetServers which aren't valid HacknetNodes)
+      else if (wasInBN9 && !isInBN9 && !hasSF9) {
+        draft.PlayerSave.data.hacknetNodes = [];
+      }
     });
   },
 

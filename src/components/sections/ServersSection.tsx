@@ -769,6 +769,8 @@ export function ServersSection() {
   const allServers = useSaveStore((state) => state.currentSave?.AllServersSave);
   const originalServers = useSaveStore((state) => state.originalSave?.AllServersSave);
   const purchasedServersList = useSaveStore((state) => state.currentSave?.PlayerSave.data.purchasedServers ?? []);
+  const sourceFiles = useSaveStore((state) => state.currentSave?.PlayerSave.data.sourceFiles);
+  const bitNodeN = useSaveStore((state) => state.currentSave?.PlayerSave.data.bitNodeN);
   const updateServerStats = useSaveStore((state) => state.updateServerStats);
   const resetServer = useSaveStore((state) => state.resetServer);
   const resetAllServers = useSaveStore((state) => state.resetAllServers);
@@ -782,6 +784,11 @@ export function ServersSection() {
   const hasPurchasedServerChanges = useSaveStore((state) => state.hasPurchasedServerChanges());
   const resetPurchasedServers = useSaveStore((state) => state.resetPurchasedServers);
   const status = useSaveStore((state) => state.status);
+
+  // Check if SF9 is active (player has Hacknet Servers)
+  const hasSF9 = sourceFiles?.data.some(([bn]) => bn === 9) ?? false;
+  const isInBN9 = bitNodeN === 9;
+  const hasHacknetServers = hasSF9 || isInBN9;
 
   const [search, setSearch] = useState('');
   const [showModifiedOnly, setShowModifiedOnly] = useState(false);
@@ -999,6 +1006,43 @@ export function ServersSection() {
                   />
                 );
               })}
+            </div>
+          )}
+        </Card>
+      ),
+    },
+    {
+      id: 'hacknet-servers',
+      label: 'Hacknet Servers',
+      notImplemented: true,
+      content: (
+        <Card
+          title="Hacknet Servers"
+          subtitle={hasHacknetServers ? "Manage your Hacknet Server farm" : "Source File 9 required"}
+        >
+          {hasHacknetServers ? (
+            <div className="text-center py-8">
+              <div className="border border-terminal-secondary/50 bg-terminal-secondary/10 p-4 inline-block mb-4">
+                <p className="text-terminal-secondary text-sm uppercase tracking-wide">Coming Soon</p>
+              </div>
+              <p className="text-terminal-dim text-sm mb-2">
+                Hacknet Server management will be available in a future update.
+              </p>
+              <p className="text-terminal-dim text-xs">
+                Hacknet Servers are real servers with hostnames like "hacknet-server-0" that can run scripts and generate hashes.
+              </p>
+            </div>
+          ) : (
+            <div className="text-center py-8">
+              <div className="border border-yellow-500/50 bg-yellow-500/10 p-4 inline-block mb-4">
+                <p className="text-yellow-400 text-sm uppercase tracking-wide">Source File 9 Required</p>
+              </div>
+              <p className="text-terminal-dim text-sm mb-2">
+                Hacknet Servers are unlocked by completing BitNode 9 or having Source File 9.
+              </p>
+              <p className="text-terminal-dim text-xs">
+                Visit the <span className="text-terminal-primary">Progression</span> tab to enable SF9 if you want to use Hacknet Servers.
+              </p>
             </div>
           )}
         </Card>

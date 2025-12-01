@@ -761,6 +761,13 @@ Run tests: `npm run test`
 
   **Principle**: The save file is the source of truth. Instead of using hardcoded values that could differ between game versions, we infer variable bonuses from what's actually stored in the save. This makes the editor robust regardless of when or on which game version the save was created.
 - **Player skill levels**: All skill levels (hacking/combat/cha) are recomputed from EXP and multipliers on load; editing level values in the save has no lasting effect. UI should treat levels as read-only and surface EXP editing instead. `src/lib/level-calculator.ts` mirrors the in-game formula (32*log(exp+534.6)-200 with clamp) and applies BitNode LevelMultipliers (BN2/3 hacking 0.8, BN6/7 hacking 0.35, BN9 hacking 0.5 + combat/cha 0.45, BN10 hacking 0.35 + others 0.4, BN11 hacking 0.6, BN12 all stats decaying by 1.02^level, BN13 hacking 0.25 + combat 0.7, BN14 hacking 0.4 + combat 0.5). It uses active source file level for the current BitNode (overrides respected) to drive BN12 decay. Player section now shows original saved level vs computed level per stat.
+- **SF9 and Hacknet data structure change (CRITICAL)**: Source File 9 (Hacknet) fundamentally changes how Hacknet data is stored:
+  - **Without SF9/BN9**: `hacknetNodes` contains HacknetNode objects with `{ctor: "HacknetNode", data: {name, level, ram, cores, ...}}`
+  - **With SF9 or in BN9**: `hacknetNodes` contains strings (hostnames like "hacknet-server-0") that reference HacknetServer entries in `AllServersSave`
+  - The game's `hasHacknetServers()` function returns `canAccessBitNodeFeature(9) && !Player.bitNodeOptions.disableHacknetServer`
+  - If `hasHacknetServers()` is true but `hacknetNodes` contains HacknetNode objects, the game crashes with "player nodes should not be HacknetNode"
+  - **Editor behavior**: When SF9 is added or BN9 is selected (without existing SF9), the store automatically clears `hacknetNodes` and resets `hashManager`. The UI shows a yellow warning explaining the change.
+  - **Schema limitation**: The current schema only supports HacknetNode objects. Saves with SF9/BN9 that have Hacknet Servers would need schema updates to properly parse the hostname strings and HacknetServer entries in AllServersSave.
 
 ---
 
@@ -950,6 +957,7 @@ Faction cards display:
 
 *Track significant updates to this context document here.*
 
+- **2025-11-30** - Fixed SF9/Hacknet crash: When SF9 (Source File 9) is enabled or BN9 is selected, the game expects `hacknetNodes` to contain hostname strings (for HacknetServers in AllServersSave) instead of HacknetNode objects. The store now automatically clears `hacknetNodes` and resets `hashManager` when SF9/BN9 access changes. UI shows yellow warning in Progression → Source Files when SF9 is enabled explaining the change. HacknetSection now detects SF9/BN9 mode and disables the Hacknet Nodes tab with a detailed warning, preventing users from adding incompatible HacknetNode objects. Added documentation to Important Notes section.
 - **2025-11-30** - Added comprehensive tab stubs for all remaining sections:
   - **HacknetSection**: Two tabs (Nodes, Hash Manager) with overview showing node count, total money generated, hash stats. Nodes tab covers add/remove nodes, edit levels/RAM/cores. Hash Manager tab covers hashes, capacity, and upgrades.
   - **ProgressionSection**: Three tabs (BitNode & Source Files, Exploits, Playtime Stats) with overview showing current BitNode, source file count, exploit count, total playtime.

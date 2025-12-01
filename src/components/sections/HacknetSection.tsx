@@ -467,6 +467,8 @@ export function HacknetSection() {
   const hacknetNodes = useSaveStore((state) => state.currentSave?.PlayerSave.data.hacknetNodes);
   const originalHacknetNodes = useSaveStore((state) => state.originalSave?.PlayerSave.data.hacknetNodes);
   const hashManager = useSaveStore((state) => state.currentSave?.PlayerSave.data.hashManager);
+  const sourceFiles = useSaveStore((state) => state.currentSave?.PlayerSave.data.sourceFiles);
+  const bitNodeN = useSaveStore((state) => state.currentSave?.PlayerSave.data.bitNodeN);
   const updateHacknetNode = useSaveStore((state) => state.updateHacknetNode);
   const addHacknetNode = useSaveStore((state) => state.addHacknetNode);
   const removeHacknetNode = useSaveStore((state) => state.removeHacknetNode);
@@ -478,6 +480,12 @@ export function HacknetSection() {
   const [showAddModal, setShowAddModal] = useState(false);
   const [showAddMaxModal, setShowAddMaxModal] = useState(false);
   const [showModifyAllModal, setShowModifyAllModal] = useState(false);
+
+  // Check if SF9 is active (player has Hacknet Servers instead of Nodes)
+  // hasHacknetServers() = canAccessBitNodeFeature(9) = Player.bitNodeN === 9 || Player.activeSourceFileLvl(9) > 0
+  const hasSF9 = sourceFiles?.data.some(([bn]) => bn === 9) ?? false;
+  const isInBN9 = bitNodeN === 9;
+  const hasHacknetServers = hasSF9 || isInBN9;
 
   if (!hacknetNodes && !hashManager) {
     return (
@@ -555,7 +563,44 @@ export function HacknetSection() {
       id: 'nodes',
       label: 'Nodes',
       hasChanges: hasHacknetNodeChanges,
-      content: (
+      content: hasHacknetServers ? (
+        // SF9/BN9 active - show warning and disable node management
+        <Card
+          title="Hacknet Nodes"
+          subtitle="Disabled - Hacknet Servers active"
+        >
+          <div className="border border-yellow-500/50 bg-yellow-500/10 p-4 mb-4">
+            <div className="flex items-start gap-3">
+              <span className="text-yellow-400 font-bold text-lg">⚠</span>
+              <div>
+                <p className="text-yellow-300 font-bold mb-2">Hacknet Servers Mode Active</p>
+                <p className="text-yellow-300/80 text-sm mb-2">
+                  {hasSF9 && isInBN9
+                    ? 'You have Source File 9 and are in BitNode 9.'
+                    : hasSF9
+                      ? 'You have Source File 9 installed.'
+                      : 'You are currently in BitNode 9.'}
+                </p>
+                <p className="text-yellow-300/80 text-sm">
+                  When SF9 is active, Hacknet uses <strong>Hacknet Servers</strong> instead of Hacknet Nodes.
+                  You can view your Hacknet Servers in the <strong>Servers</strong> tab (look for hostnames starting with "hacknet-server-").
+                </p>
+                <p className="text-terminal-dim text-xs mt-3">
+                  The Hacknet Nodes editor is disabled because adding HacknetNode objects would cause the game to crash.
+                </p>
+              </div>
+            </div>
+          </div>
+
+          <div className="text-terminal-dim text-sm">
+            <p className="mb-2">To use Hacknet Nodes instead:</p>
+            <ul className="list-disc list-inside space-y-1 text-xs">
+              <li>Remove Source File 9 from Progression → Source Files</li>
+              {isInBN9 && <li>Change to a different BitNode in Progression → BitNode</li>}
+            </ul>
+          </div>
+        </Card>
+      ) : (
         <Card
           title="Hacknet Nodes"
           subtitle={`${filteredNodes.length} of ${nodeCount} nodes shown`}
@@ -689,25 +734,42 @@ export function HacknetSection() {
     <>
       <Card
         title="Hacknet"
-        subtitle={`${nodeCount} node${nodeCount !== 1 ? 's' : ''}`}
+        subtitle={hasHacknetServers ? 'Hacknet Servers (SF9/BN9)' : `${nodeCount} node${nodeCount !== 1 ? 's' : ''}`}
       >
         <div className="space-y-6">
+          {/* SF9/BN9 Warning Banner */}
+          {hasHacknetServers && (
+            <div className="border border-yellow-500/50 bg-yellow-500/10 p-3 text-sm">
+              <span className="text-yellow-400 font-bold">⚠ HACKNET SERVERS MODE:</span>
+              <span className="text-yellow-300/80 ml-2">
+                {hasSF9 ? 'SF9 installed' : 'In BitNode 9'} — Hacknet Nodes are replaced by Hacknet Servers.
+              </span>
+            </div>
+          )}
+
           {/* Hacknet Overview */}
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {/* Node Stats */}
+            {/* Node/Server Stats */}
             <div className="space-y-4">
               <h3 className="text-terminal-secondary text-sm uppercase tracking-wide border-b border-terminal-dim pb-1">
-                &gt; Node Stats
+                &gt; {hasHacknetServers ? 'Server Stats' : 'Node Stats'}
               </h3>
               <div className="space-y-2 text-sm font-mono">
                 <div className="flex justify-between">
-                  <span className="text-terminal-dim">Total Nodes:</span>
+                  <span className="text-terminal-dim">Total {hasHacknetServers ? 'Servers' : 'Nodes'}:</span>
                   <span className="text-terminal-primary">{nodeCount}</span>
                 </div>
-                <div className="flex justify-between">
-                  <span className="text-terminal-dim">Total Money Generated:</span>
-                  <span className="text-terminal-primary">{formatMoney(totalMoneyGenerated)}</span>
-                </div>
+                {!hasHacknetServers && (
+                  <div className="flex justify-between">
+                    <span className="text-terminal-dim">Total Money Generated:</span>
+                    <span className="text-terminal-primary">{formatMoney(totalMoneyGenerated)}</span>
+                  </div>
+                )}
+                {hasHacknetServers && (
+                  <p className="text-terminal-dim text-xs">
+                    View Hacknet Servers in the Servers tab.
+                  </p>
+                )}
               </div>
             </div>
 
@@ -738,7 +800,9 @@ export function HacknetSection() {
                 &gt; Info
               </h3>
               <p className="text-terminal-dim text-sm">
-                Hacknet nodes generate passive income. Hacknet servers (BitNode 9+) generate hashes that can be spent on upgrades.
+                {hasHacknetServers
+                  ? 'Hacknet Servers generate hashes that can be spent on upgrades. View and edit them in the Servers tab.'
+                  : 'Hacknet nodes generate passive income. Hacknet servers (BitNode 9+) generate hashes that can be spent on upgrades.'}
               </p>
             </div>
           </div>

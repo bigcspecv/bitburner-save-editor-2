@@ -85,6 +85,16 @@ function SourceFileCard({
         "{metadata.tagline}"
       </p>
 
+      {/* SF9 Warning - shown when owned */}
+      {bitNodeNumber === 9 && isOwned && (
+        <div className="border border-yellow-500/50 bg-yellow-500/10 p-2 mt-2 text-xs">
+          <span className="text-yellow-400 font-bold">⚠ WARNING:</span>
+          <span className="text-yellow-300 ml-1">
+            Enabling SF9 converts Hacknet Nodes to Servers. Your existing Hacknet Nodes have been cleared.
+          </span>
+        </div>
+      )}
+
       {/* Expanded Details */}
       {expanded && (
         <div className="border-t border-terminal-primary/30 pt-3 mt-2 space-y-3">
@@ -242,6 +252,15 @@ function BitNodeSourceFilesTab() {
             options={bitNodeOptions}
             showSearch={false}
           />
+          {/* Warning when entering BN9 without SF9 */}
+          {playerData.bitNodeN === 9 && !sourceFilesMap.has(9) && (
+            <div className="border border-yellow-500/50 bg-yellow-500/10 p-2 text-xs">
+              <span className="text-yellow-400 font-bold">⚠ WARNING:</span>
+              <span className="text-yellow-300 ml-1">
+                BitNode 9 uses Hacknet Servers instead of Nodes. Your Hacknet Nodes have been cleared.
+              </span>
+            </div>
+          )}
           {getBitNodeMetadata(playerData.bitNodeN) && (
             <div className="space-y-2">
               <p className="text-terminal-secondary text-sm">
