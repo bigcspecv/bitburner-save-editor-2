@@ -1,4 +1,5 @@
-import { Card, Tabs, Checkbox, NumberInput, Input, ResetAction } from '../ui';
+import { Card, Tabs, Checkbox, NumberInput, Input, ResetAction, Select } from '../ui';
+import type { SelectOption } from '../ui/Select';
 import { useSaveStore } from '../../store/save-store';
 import type { SettingsSave } from '../../models/schemas/misc';
 
@@ -6,6 +7,42 @@ import type { SettingsSave } from '../../models/schemas/misc';
 function isSettingsSave(value: unknown): value is SettingsSave {
   return value !== null && typeof value === 'object';
 }
+
+// Monaco editor theme options (from Bitburner's loadThemes)
+const MONACO_THEME_OPTIONS: SelectOption[] = [
+  { value: 'monokai', label: 'Monokai' },
+  { value: 'solarized-dark', label: 'Solarized Dark' },
+  { value: 'solarized-light', label: 'Solarized Light' },
+  { value: 'dracula', label: 'Dracula' },
+  { value: 'one-dark', label: 'One Dark' },
+];
+
+// Word wrap options (from Monaco editor)
+const WORD_WRAP_OPTIONS: SelectOption[] = [
+  { value: 'off', label: 'Off' },
+  { value: 'on', label: 'On' },
+  { value: 'bounded', label: 'Bounded' },
+  { value: 'wordWrapColumn', label: 'Word Wrap Column' },
+];
+
+// Cursor style options (from Monaco editor)
+const CURSOR_STYLE_OPTIONS: SelectOption[] = [
+  { value: 'line', label: 'Line' },
+  { value: 'block', label: 'Block' },
+  { value: 'underline', label: 'Underline' },
+  { value: 'line-thin', label: 'Line (Thin)' },
+  { value: 'block-outline', label: 'Block (Outline)' },
+  { value: 'underline-thin', label: 'Underline (Thin)' },
+];
+
+// Cursor blinking options (from Monaco editor)
+const CURSOR_BLINKING_OPTIONS: SelectOption[] = [
+  { value: 'blink', label: 'Blink' },
+  { value: 'smooth', label: 'Smooth' },
+  { value: 'phase', label: 'Phase' },
+  { value: 'expand', label: 'Expand' },
+  { value: 'solid', label: 'Solid' },
+];
 
 // Helper to safely get a setting value
 function getSetting<T>(settings: SettingsSave | undefined, key: string, defaultValue: T): T {
@@ -517,32 +554,173 @@ export function SettingsSection() {
     {
       id: 'editor',
       label: 'Script Editor',
-      notImplemented: true,
-      content: (
-        <Card title="Script Editor Settings" subtitle="Not yet implemented">
-          <p className="text-terminal-dim">Customize the Monaco script editor.</p>
-          <ul className="mt-3 space-y-1 text-sm text-terminal-secondary">
-            <li className="flex items-start gap-2">
-              <span className="text-terminal-primary">•</span>
-              <span>Editor theme (Monokai, etc.)</span>
-            </li>
-            <li className="flex items-start gap-2">
-              <span className="text-terminal-primary">•</span>
-              <span>Font family and size</span>
-            </li>
-            <li className="flex items-start gap-2">
-              <span className="text-terminal-primary">•</span>
-              <span>Tab size and indentation style</span>
-            </li>
-            <li className="flex items-start gap-2">
-              <span className="text-terminal-primary">•</span>
-              <span>Vim mode, word wrap, cursor style</span>
-            </li>
-            <li className="flex items-start gap-2">
-              <span className="text-terminal-primary">•</span>
-              <span>Key bindings</span>
-            </li>
-          </ul>
+      content: hasSettings ? (
+        <div className="space-y-6">
+          {/* Header with Reset */}
+          <div className="flex items-center justify-between mb-4">
+            <h3 className="text-terminal-secondary text-sm uppercase tracking-wide">
+              &gt; Script Editor Settings
+            </h3>
+            <ResetAction
+              hasChanges={hasSettingsChanges()}
+              onReset={resetSettings}
+              title="Reset Settings"
+            />
+          </div>
+
+          {/* Theme */}
+          <SettingGroup title="Theme">
+            <SettingRow
+              label="Editor Theme"
+              description="Color scheme for the script editor. (Default: Monokai)"
+            >
+              <Select
+                options={MONACO_THEME_OPTIONS}
+                value={getSetting(settings, 'MonacoTheme', 'monokai')}
+                onChange={(value) => updateSettings({ MonacoTheme: String(value) })}
+                showSearch={false}
+                className="w-44"
+              />
+            </SettingRow>
+          </SettingGroup>
+
+          {/* Font Settings */}
+          <SettingGroup title="Font">
+            <SettingRow
+              label="Font Family"
+              description="Font used in the script editor. (Default: JetBrainsMono)"
+            >
+              <Input
+                value={getSetting(settings, 'MonacoFontFamily', 'JetBrainsMono')}
+                onChange={handleStringChange('MonacoFontFamily')}
+                className="w-44"
+              />
+            </SettingRow>
+            <SettingRow
+              label="Font Size"
+              description="Text size in pixels. (Default: 20)"
+            >
+              <NumberInput
+                value={getSetting(settings, 'MonacoFontSize', 20)}
+                onChange={handleNumberChange('MonacoFontSize')}
+                min={8}
+                max={72}
+                className="w-24"
+              />
+            </SettingRow>
+            <SettingRow
+              label="Font Ligatures"
+              description="Enable ligatures for supported fonts (e.g., => becomes arrow). (Default: off)"
+            >
+              <Checkbox
+                checked={getSetting(settings, 'MonacoFontLigatures', false)}
+                onChange={handleBooleanChange('MonacoFontLigatures')}
+              />
+            </SettingRow>
+          </SettingGroup>
+
+          {/* Indentation */}
+          <SettingGroup title="Indentation">
+            <SettingRow
+              label="Insert Spaces"
+              description="Use spaces instead of tabs for indentation. (Default: on)"
+            >
+              <Checkbox
+                checked={getSetting(settings, 'MonacoInsertSpaces', true)}
+                onChange={handleBooleanChange('MonacoInsertSpaces')}
+              />
+            </SettingRow>
+            <SettingRow
+              label="Tab Size"
+              description="Number of spaces per indentation level. (Default: 2)"
+            >
+              <NumberInput
+                value={getSetting(settings, 'MonacoTabSize', 2)}
+                onChange={handleNumberChange('MonacoTabSize')}
+                min={1}
+                max={8}
+                className="w-24"
+              />
+            </SettingRow>
+            <SettingRow
+              label="Detect Indentation"
+              description="Auto-detect indentation settings per file based on content. (Default: off)"
+            >
+              <Checkbox
+                checked={getSetting(settings, 'MonacoDetectIndentation', false)}
+                onChange={handleBooleanChange('MonacoDetectIndentation')}
+              />
+            </SettingRow>
+          </SettingGroup>
+
+          {/* Editor Behavior */}
+          <SettingGroup title="Behavior">
+            <SettingRow
+              label="Vim Mode"
+              description="Enable Vim keybindings by default when opening the editor. (Default: off)"
+            >
+              <Checkbox
+                checked={getSetting(settings, 'MonacoDefaultToVim', false)}
+                onChange={handleBooleanChange('MonacoDefaultToVim')}
+              />
+            </SettingRow>
+            <SettingRow
+              label="Word Wrap"
+              description="How long lines should wrap in the editor. (Default: Off)"
+            >
+              <Select
+                options={WORD_WRAP_OPTIONS}
+                value={getSetting(settings, 'MonacoWordWrap', 'off')}
+                onChange={(value) => updateSettings({ MonacoWordWrap: String(value) })}
+                showSearch={false}
+                className="w-44"
+              />
+            </SettingRow>
+            <SettingRow
+              label="Beautify on Save"
+              description="Automatically format code when saving a file. (Default: off)"
+            >
+              <Checkbox
+                checked={getSetting(settings, 'MonacoBeautifyOnSave', false)}
+                onChange={handleBooleanChange('MonacoBeautifyOnSave')}
+              />
+            </SettingRow>
+          </SettingGroup>
+
+          {/* Cursor */}
+          <SettingGroup title="Cursor">
+            <SettingRow
+              label="Cursor Style"
+              description="Visual style of the text cursor. (Default: Line)"
+            >
+              <Select
+                options={CURSOR_STYLE_OPTIONS}
+                value={getSetting(settings, 'MonacoCursorStyle', 'line')}
+                onChange={(value) => updateSettings({ MonacoCursorStyle: String(value) })}
+                showSearch={false}
+                className="w-44"
+              />
+            </SettingRow>
+            <SettingRow
+              label="Cursor Blinking"
+              description="Animation style for the text cursor. (Default: Blink)"
+            >
+              <Select
+                options={CURSOR_BLINKING_OPTIONS}
+                value={getSetting(settings, 'MonacoCursorBlinking', 'blink')}
+                onChange={(value) => updateSettings({ MonacoCursorBlinking: String(value) })}
+                showSearch={false}
+                className="w-44"
+              />
+            </SettingRow>
+          </SettingGroup>
+        </div>
+      ) : (
+        <Card title="Script Editor Settings" subtitle="No settings data available">
+          <p className="text-terminal-dim">
+            This save file does not contain settings data. Settings are typically created when
+            you modify options in the game.
+          </p>
         </Card>
       ),
     },
@@ -640,13 +818,19 @@ export function SettingsSection() {
                   <div className="flex justify-between">
                     <span className="text-terminal-dim">Theme:</span>
                     <span className="text-terminal-secondary">
-                      {getSetting(settings, 'MonacoTheme', 'monokai')}
+                      {MONACO_THEME_OPTIONS.find(o => o.value === getSetting(settings, 'MonacoTheme', 'monokai'))?.label || 'Monokai'}
                     </span>
                   </div>
                   <div className="flex justify-between">
-                    <span className="text-terminal-dim">Font Size:</span>
+                    <span className="text-terminal-dim">Font:</span>
                     <span className="text-terminal-secondary">
-                      {getSetting(settings, 'MonacoFontSize', 20)}px
+                      {getSetting(settings, 'MonacoFontFamily', 'JetBrainsMono')} {getSetting(settings, 'MonacoFontSize', 20)}px
+                    </span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-terminal-dim">Vim Mode:</span>
+                    <span className="text-terminal-secondary">
+                      {getSetting(settings, 'MonacoDefaultToVim', false) ? 'On' : 'Off'}
                     </span>
                   </div>
                 </>

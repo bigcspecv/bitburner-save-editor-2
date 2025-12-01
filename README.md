@@ -198,7 +198,8 @@ The editor is organized by **gameplay concepts**, not save file structure:
   - [ ] Go minigame
   - [ ] Infiltrations
 - [ ] Settings section
-  - [ ] Game settings
+  - [x] General settings
+  - [x] Script editor settings
   - [ ] Theme customization
 - [ ] Utilities
   - [ ] Aliases
