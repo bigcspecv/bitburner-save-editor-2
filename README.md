@@ -151,7 +151,7 @@ The editor is organized by **gameplay concepts**, not save file structure:
   - [ ] Gang members (add/edit/remove)
   - [ ] Territory & power
 - [ ] Hacknet section
-  - [ ] Hacknet nodes (add/edit/remove)
+  - [x] Hacknet nodes (add/edit/remove)
   - [ ] Hash manager & upgrades
 - [ ] Progression section
   - [ ] BitNode & source files

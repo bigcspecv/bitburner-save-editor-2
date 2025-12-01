@@ -75,6 +75,15 @@ interface SaveStoreState {
   ) => void;
   resetGang: () => void;
   hasGangChanges: () => boolean;
+  updateHacknetNode: (
+    index: number,
+    updates: Partial<Pick<NonNullable<ParsedSaveData['PlayerSave']['data']['hacknetNodes'][number]>['data'],
+      'level' | 'ram' | 'cores' | 'totalMoneyGenerated' | 'onlineTimeSeconds'>>
+  ) => void;
+  addHacknetNode: (name: string, level?: number, ram?: number, cores?: number) => void;
+  removeHacknetNode: (index: number) => void;
+  resetHacknetNodes: () => void;
+  hasHacknetNodeChanges: () => boolean;
   clearError: () => void;
 }
 
@@ -891,6 +900,56 @@ export const useSaveStore = create<SaveStoreState>((set, get) => ({
     });
 
     return JSON.stringify(snapshot(originalSave)) !== JSON.stringify(snapshot(currentSave));
+  },
+
+  updateHacknetNode(index, updates) {
+    get().mutateCurrentSave((draft) => {
+      const node = draft.PlayerSave.data.hacknetNodes[index];
+      if (node) {
+        node.data = { ...node.data, ...updates };
+      }
+    });
+  },
+
+  addHacknetNode(name, level = 1, ram = 1, cores = 1) {
+    get().mutateCurrentSave((draft) => {
+      const newNode = {
+        ctor: 'HacknetNode' as const,
+        data: {
+          name,
+          level,
+          ram,
+          cores,
+          totalMoneyGenerated: 0,
+          onlineTimeSeconds: 0,
+          moneyGainRatePerSecond: 0,
+        },
+      };
+      draft.PlayerSave.data.hacknetNodes.push(newNode);
+    });
+  },
+
+  removeHacknetNode(index) {
+    get().mutateCurrentSave((draft) => {
+      draft.PlayerSave.data.hacknetNodes.splice(index, 1);
+    });
+  },
+
+  resetHacknetNodes() {
+    const { originalSave, currentSave } = get();
+    if (!originalSave || !currentSave) return;
+
+    const draft = cloneSave(currentSave);
+    draft.PlayerSave.data.hacknetNodes = cloneSave(originalSave.PlayerSave.data.hacknetNodes);
+    set({ currentSave: draft });
+  },
+
+  hasHacknetNodeChanges() {
+    const { originalSave, currentSave } = get();
+    if (!originalSave || !currentSave) return false;
+
+    return JSON.stringify(originalSave.PlayerSave.data.hacknetNodes) !==
+      JSON.stringify(currentSave.PlayerSave.data.hacknetNodes);
   },
 
   clearError() {
