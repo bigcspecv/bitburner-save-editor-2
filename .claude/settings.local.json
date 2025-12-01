@@ -21,7 +21,8 @@
       "Bash(npx vite build)",
       "Bash(npx tsx:*)",
       "Bash(timeout 15 npm run dev:*)",
-      "Bash(timeout 10 npm run dev:*)"
+      "Bash(timeout 10 npm run dev:*)",
+      "Bash(timeout 10 npm run build:*)"
     ],
     "deny": [],
     "ask": []

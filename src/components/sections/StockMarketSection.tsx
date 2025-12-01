@@ -1,9 +1,12 @@
-import { Card, Tabs } from '../ui';
+import { Card, Checkbox, Tabs, ResetAction } from '../ui';
 import { useSaveStore } from '../../store/save-store';
 
 export function StockMarketSection() {
   const playerData = useSaveStore((state) => state.currentSave?.PlayerSave.data);
   const stockMarketSave = useSaveStore((state) => state.currentSave?.StockMarketSave);
+  const updateStockMarketAccess = useSaveStore((state) => state.updateStockMarketAccess);
+  const resetStockMarket = useSaveStore((state) => state.resetStockMarket);
+  const hasStockMarketChanges = useSaveStore((state) => state.hasStockMarketChanges);
 
   if (!playerData) {
     return (
@@ -25,42 +28,103 @@ export function StockMarketSection() {
       id: 'access',
       label: 'Access & Settings',
       content: (
-        <Card title="Access & Settings" subtitle="Navigation stub — editor UI coming soon">
-          <p className="text-terminal-dim">Edit stock market access flags and API permissions.</p>
-          <ul className="mt-3 space-y-1 text-sm text-terminal-secondary">
-            <li className="flex items-start gap-2">
-              <span className="text-terminal-primary">•</span>
-              <span>WSE Account access</span>
-            </li>
-            <li className="flex items-start gap-2">
-              <span className="text-terminal-primary">•</span>
-              <span>TIX API access</span>
-            </li>
-            <li className="flex items-start gap-2">
-              <span className="text-terminal-primary">•</span>
-              <span>4S Market Data access</span>
-            </li>
-            <li className="flex items-start gap-2">
-              <span className="text-terminal-primary">•</span>
-              <span>4S Market Data TIX API access</span>
-            </li>
-          </ul>
+        <Card
+          title="Access & Settings"
+          subtitle="Edit stock market access flags and API permissions"
+          actions={
+            <ResetAction
+              title="Reset Access"
+              hasChanges={hasStockMarketChanges()}
+              onReset={resetStockMarket}
+            />
+          }
+        >
+          <div className="space-y-6">
+            {/* Access Toggles */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              {/* WSE Account */}
+              <div className="space-y-3 p-4 border border-terminal-dim">
+                <h4 className="text-terminal-secondary text-sm uppercase tracking-wide">
+                  &gt; WSE Account
+                </h4>
+                <p className="text-terminal-dim text-xs">
+                  Wall Street Exchange account access. Required to trade stocks.
+                </p>
+                <Checkbox
+                  label="Has WSE Account"
+                  checked={hasWseAccount}
+                  onChange={(e) => updateStockMarketAccess({ hasWseAccount: e.target.checked })}
+                />
+              </div>
+
+              {/* TIX API */}
+              <div className="space-y-3 p-4 border border-terminal-dim">
+                <h4 className="text-terminal-secondary text-sm uppercase tracking-wide">
+                  &gt; TIX API Access
+                </h4>
+                <p className="text-terminal-dim text-xs">
+                  Trade Information eXchange API. Enables programmatic stock trading.
+                </p>
+                <Checkbox
+                  label="Has TIX API Access"
+                  checked={hasTixApi}
+                  onChange={(e) => updateStockMarketAccess({ hasTixApiAccess: e.target.checked })}
+                />
+              </div>
+
+              {/* 4S Market Data */}
+              <div className="space-y-3 p-4 border border-terminal-dim">
+                <h4 className="text-terminal-secondary text-sm uppercase tracking-wide">
+                  &gt; 4S Market Data
+                </h4>
+                <p className="text-terminal-dim text-xs">
+                  Four Sigma market data subscription. Shows stock forecasts and volatility.
+                </p>
+                <Checkbox
+                  label="Has 4S Market Data"
+                  checked={has4SData}
+                  onChange={(e) => updateStockMarketAccess({ has4SData: e.target.checked })}
+                />
+              </div>
+
+              {/* 4S TIX API */}
+              <div className="space-y-3 p-4 border border-terminal-dim">
+                <h4 className="text-terminal-secondary text-sm uppercase tracking-wide">
+                  &gt; 4S Market Data TIX API
+                </h4>
+                <p className="text-terminal-dim text-xs">
+                  API access to 4S market data. Enables programmatic access to forecasts.
+                </p>
+                <Checkbox
+                  label="Has 4S TIX API"
+                  checked={has4STixApi}
+                  onChange={(e) => updateStockMarketAccess({ has4SDataTixApi: e.target.checked })}
+                />
+              </div>
+            </div>
+
+            {/* Info */}
+            <div className="text-terminal-dim text-xs border-t border-terminal-dim pt-4">
+              <p>
+                <span className="text-terminal-secondary">Note:</span> WSE Account is required to view the stock market in-game.
+                TIX API access enables the <code className="text-terminal-primary">stock</code> NetScript API functions.
+                4S data provides forecast and volatility information.
+              </p>
+            </div>
+          </div>
         </Card>
       ),
     },
     {
       id: 'positions',
       label: 'Positions',
+      notImplemented: true,
       content: (
-        <Card title="Stock Positions" subtitle="Navigation stub — schema implementation required">
+        <Card title="Stock Positions" subtitle="View and edit stock positions (schema implementation required)">
           <p className="text-terminal-dim">
             {stockMarketSave
               ? 'Stock position data exists but requires schema implementation to edit.'
               : 'No stock market data in save file.'}
-          </p>
-          <p className="mt-2 text-black text-sm italic">
-            Each stock has player shares (long/short), average prices, and market data.
-            Full editing support requires implementing detailed Stock schemas.
           </p>
           <ul className="mt-3 space-y-1 text-sm text-terminal-secondary">
             <li className="flex items-start gap-2">
@@ -82,16 +146,13 @@ export function StockMarketSection() {
     {
       id: 'orders',
       label: 'Orders',
+      notImplemented: true,
       content: (
-        <Card title="Open Orders" subtitle="Navigation stub — schema implementation required">
+        <Card title="Open Orders" subtitle="View and edit open orders (schema implementation required)">
           <p className="text-terminal-dim">
             {stockMarketSave
               ? 'Order data may exist but requires schema implementation to edit.'
               : 'No stock market data in save file.'}
-          </p>
-          <p className="mt-2 text-black text-sm italic">
-            Orders include limit orders and stop orders for buying/selling stocks.
-            Full editing support requires implementing Order schemas.
           </p>
           <ul className="mt-3 space-y-1 text-sm text-terminal-secondary">
             <li className="flex items-start gap-2">

@@ -91,6 +91,12 @@ interface SaveStoreState {
   updateBitNodeN: (bitNodeNumber: number) => void;
   resetSourceFiles: () => void;
   hasSourceFileChanges: () => boolean;
+  // Stock Market methods
+  updateStockMarketAccess: (
+    updates: Partial<Pick<ParsedSaveData['PlayerSave']['data'], 'hasWseAccount' | 'hasTixApiAccess' | 'has4SData' | 'has4SDataTixApi'>>
+  ) => void;
+  resetStockMarket: () => void;
+  hasStockMarketChanges: () => boolean;
   clearError: () => void;
 }
 
@@ -1059,6 +1065,43 @@ export const useSaveStore = create<SaveStoreState>((set, get) => ({
     const bnChanged = originalSave.PlayerSave.data.bitNodeN !== currentSave.PlayerSave.data.bitNodeN;
 
     return sfChanged || bnChanged;
+  },
+
+  // Stock Market methods
+  updateStockMarketAccess(updates) {
+    get().mutateCurrentSave((draft) => {
+      draft.PlayerSave.data = {
+        ...draft.PlayerSave.data,
+        ...updates,
+      };
+    });
+  },
+
+  resetStockMarket() {
+    const { originalSave, currentSave } = get();
+    if (!originalSave || !currentSave) return;
+
+    const draft = cloneSave(currentSave);
+    draft.PlayerSave.data.hasWseAccount = originalSave.PlayerSave.data.hasWseAccount;
+    draft.PlayerSave.data.hasTixApiAccess = originalSave.PlayerSave.data.hasTixApiAccess;
+    draft.PlayerSave.data.has4SData = originalSave.PlayerSave.data.has4SData;
+    draft.PlayerSave.data.has4SDataTixApi = originalSave.PlayerSave.data.has4SDataTixApi;
+
+    set({ currentSave: draft });
+  },
+
+  hasStockMarketChanges() {
+    const { originalSave, currentSave } = get();
+    if (!originalSave || !currentSave) return false;
+
+    const snapshot = (save: ParsedSaveData) => ({
+      hasWseAccount: save.PlayerSave.data.hasWseAccount,
+      hasTixApiAccess: save.PlayerSave.data.hasTixApiAccess,
+      has4SData: save.PlayerSave.data.has4SData,
+      has4SDataTixApi: save.PlayerSave.data.has4SDataTixApi,
+    });
+
+    return JSON.stringify(snapshot(originalSave)) !== JSON.stringify(snapshot(currentSave));
   },
 
   clearError() {
