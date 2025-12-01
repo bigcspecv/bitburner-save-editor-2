@@ -97,6 +97,10 @@ interface SaveStoreState {
   ) => void;
   resetStockMarket: () => void;
   hasStockMarketChanges: () => boolean;
+  // Settings methods
+  updateSettings: (updates: Record<string, unknown>) => void;
+  resetSettings: () => void;
+  hasSettingsChanges: () => boolean;
   clearError: () => void;
 }
 
@@ -1102,6 +1106,31 @@ export const useSaveStore = create<SaveStoreState>((set, get) => ({
     });
 
     return JSON.stringify(snapshot(originalSave)) !== JSON.stringify(snapshot(currentSave));
+  },
+
+  // Settings methods
+  updateSettings(updates) {
+    get().mutateCurrentSave((draft) => {
+      if (draft.SettingsSave) {
+        draft.SettingsSave = { ...draft.SettingsSave, ...updates };
+      }
+    });
+  },
+
+  resetSettings() {
+    const { originalSave, currentSave } = get();
+    if (!originalSave || !currentSave) return;
+
+    const draft = cloneSave(currentSave);
+    draft.SettingsSave = cloneSave(originalSave.SettingsSave);
+    set({ currentSave: draft });
+  },
+
+  hasSettingsChanges() {
+    const { originalSave, currentSave } = get();
+    if (!originalSave || !currentSave) return false;
+
+    return JSON.stringify(originalSave.SettingsSave) !== JSON.stringify(currentSave.SettingsSave);
   },
 
   clearError() {

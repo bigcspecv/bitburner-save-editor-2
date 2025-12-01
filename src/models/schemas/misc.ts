@@ -13,9 +13,102 @@ export const StockMarketSaveSchema = z.object({
 
 /**
  * Settings schema - game settings
+ * Based on Bitburner's Settings.ts
  */
 export const SettingsSaveSchema = z.object({
-  // Settings are highly variable, so we use passthrough
+  // General Settings
+  AutosaveInterval: z.number().optional(),
+  Locale: z.string().optional(),
+  TimestampsFormat: z.string().optional(),
+
+  // Display Options
+  DisableASCIIArt: z.boolean().optional(),
+  DisableHotkeys: z.boolean().optional(),
+  DisableTextEffects: z.boolean().optional(),
+  DisableOverviewProgressBars: z.boolean().optional(),
+  IsSidebarOpened: z.boolean().optional(),
+
+  // Terminal & Bash
+  EnableBashHotkeys: z.boolean().optional(),
+  EnableHistorySearch: z.boolean().optional(),
+
+  // Capacity Limits
+  MaxRecentScriptsCapacity: z.number().optional(),
+  MaxLogCapacity: z.number().optional(),
+  MaxPortCapacity: z.number().optional(),
+  MaxTerminalCapacity: z.number().optional(),
+
+  // Suppress Dialog Options
+  SuppressBuyAugmentationConfirmation: z.boolean().optional(),
+  SuppressErrorModals: z.boolean().optional(),
+  SuppressFactionInvites: z.boolean().optional(),
+  SuppressMessages: z.boolean().optional(),
+  SuppressTravelConfirmation: z.boolean().optional(),
+  SuppressBladeburnerPopup: z.boolean().optional(),
+  SuppressTIXPopup: z.boolean().optional(),
+  SuppressSavedGameToast: z.boolean().optional(),
+  SuppressAutosaveDisabledWarnings: z.boolean().optional(),
+
+  // Number Formatting
+  UseIEC60027_2: z.boolean().optional(),
+  ShowMiddleNullTimeUnit: z.boolean().optional(),
+  hideTrailingDecimalZeros: z.boolean().optional(),
+  hideThousandsSeparator: z.boolean().optional(),
+  useEngineeringNotation: z.boolean().optional(),
+  disableSuffixes: z.boolean().optional(),
+
+  // Remote File API
+  RemoteFileApiAddress: z.string().optional(),
+  RemoteFileApiPort: z.number().optional(),
+  RemoteFileApiReconnectionDelay: z.number().optional(),
+  UseWssForRemoteFileApi: z.boolean().optional(),
+
+  // Save Options
+  SaveGameOnFileSave: z.boolean().optional(),
+  ExcludeRunningScriptsFromSave: z.boolean().optional(),
+
+  // Script Editor Settings
+  MonacoTheme: z.string().optional(),
+  MonacoInsertSpaces: z.boolean().optional(),
+  MonacoTabSize: z.number().optional(),
+  MonacoDetectIndentation: z.boolean().optional(),
+  MonacoFontFamily: z.string().optional(),
+  MonacoFontSize: z.number().optional(),
+  MonacoFontLigatures: z.boolean().optional(),
+  MonacoDefaultToVim: z.boolean().optional(),
+  MonacoWordWrap: z.string().optional(),
+  MonacoBeautifyOnSave: z.boolean().optional(),
+  MonacoCursorStyle: z.string().optional(),
+  MonacoCursorBlinking: z.string().optional(),
+
+  // Active Scripts Display
+  ActiveScriptsServerPageSize: z.number().optional(),
+  ActiveScriptsScriptPageSize: z.number().optional(),
+  AutoexecScript: z.string().optional(),
+
+  // Augmentations Ordering
+  OwnedAugmentationsOrder: z.number().optional(),
+  PurchaseAugmentationsOrder: z.number().optional(),
+
+  // Go Game
+  GoTraditionalStyle: z.boolean().optional(),
+
+  // Tail Window
+  TailRenderInterval: z.number().optional(),
+
+  // Steam
+  SyncSteamAchievements: z.boolean().optional(),
+
+  // Theme & Styles (complex objects)
+  theme: z.unknown().optional(),
+  styles: z.unknown().optional(),
+  EditorTheme: z.unknown().optional(),
+  overview: z.object({
+    x: z.number().optional(),
+    y: z.number().optional(),
+    opened: z.boolean().optional(),
+  }).optional(),
+  KeyBindings: z.unknown().optional(),
 }).passthrough();
 
 /**

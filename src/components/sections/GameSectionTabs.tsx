@@ -38,6 +38,7 @@ export function GameSectionTabs({ className }: GameSectionTabsProps) {
   const hasHacknetNodeChanges = useSaveStore((s) => s.hasHacknetNodeChanges);
   const hasSourceFileChanges = useSaveStore((s) => s.hasSourceFileChanges);
   const hasStockMarketChanges = useSaveStore((s) => s.hasStockMarketChanges);
+  const hasSettingsChanges = useSaveStore((s) => s.hasSettingsChanges);
 
   const sectionTabs: Tab[] = useMemo(() => [
     { id: 'player', label: 'Player', content: <PlayerSection />, hasChanges: hasPlayerStatChanges() || hasPlayerResourceChanges() },
@@ -52,7 +53,7 @@ export function GameSectionTabs({ className }: GameSectionTabsProps) {
     { id: 'business', label: 'Business', content: <BusinessSection />, notImplemented: true },
     { id: 'stock-market', label: 'Stock Market', content: <StockMarketSection />, hasChanges: hasStockMarketChanges() },
     { id: 'special', label: 'Special', content: <SpecialSection />, notImplemented: true },
-    { id: 'settings', label: 'Settings', content: <SettingsSection />, notImplemented: true },
+    { id: 'settings', label: 'Settings', content: <SettingsSection />, hasChanges: hasSettingsChanges() },
   // eslint-disable-next-line react-hooks/exhaustive-deps
   ], [currentSave]);
 
