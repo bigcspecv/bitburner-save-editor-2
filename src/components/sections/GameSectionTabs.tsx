@@ -42,14 +42,14 @@ export function GameSectionTabs({ className }: GameSectionTabsProps) {
     { id: 'factions', label: 'Factions', content: <FactionsSection />, hasChanges: hasFactionChanges() },
     { id: 'companies', label: 'Companies', content: <CompaniesSection />, hasChanges: hasCompanyChanges() },
     { id: 'servers', label: 'Servers', content: <ServersSection />, hasChanges: hasServerChanges() },
-    { id: 'scripts', label: 'Scripts', content: <ScriptsSection /> },
+    { id: 'scripts', label: 'Scripts', content: <ScriptsSection />, notImplemented: true },
     { id: 'gangs', label: 'Gangs', content: <GangsSection />, hasChanges: hasGangChanges() },
-    { id: 'hacknet', label: 'Hacknet', content: <HacknetSection /> },
-    { id: 'progression', label: 'Progression', content: <ProgressionSection /> },
-    { id: 'business', label: 'Business', content: <BusinessSection /> },
-    { id: 'stock-market', label: 'Stock Market', content: <StockMarketSection /> },
-    { id: 'special', label: 'Special', content: <SpecialSection /> },
-    { id: 'settings', label: 'Settings', content: <SettingsSection /> },
+    { id: 'hacknet', label: 'Hacknet', content: <HacknetSection />, notImplemented: true },
+    { id: 'progression', label: 'Progression', content: <ProgressionSection />, notImplemented: true },
+    { id: 'business', label: 'Business', content: <BusinessSection />, notImplemented: true },
+    { id: 'stock-market', label: 'Stock Market', content: <StockMarketSection />, notImplemented: true },
+    { id: 'special', label: 'Special', content: <SpecialSection />, notImplemented: true },
+    { id: 'settings', label: 'Settings', content: <SettingsSection />, notImplemented: true },
   // eslint-disable-next-line react-hooks/exhaustive-deps
   ], [currentSave]);
 

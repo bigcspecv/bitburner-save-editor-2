@@ -6,6 +6,8 @@ export interface Tab {
   label: string;
   content: ReactNode;
   hasChanges?: boolean;
+  /** Mark tab as not yet implemented (shows strikethrough) */
+  notImplemented?: boolean;
 }
 
 export interface TabsProps {
@@ -41,7 +43,7 @@ export function Tabs({ tabs, defaultTab, className }: TabsProps) {
               }
             )}
           >
-            &gt; {tab.label}
+            &gt; <span className={tab.notImplemented ? 'line-through' : ''}>{tab.label}</span>
             {tab.hasChanges && (
               <span className="ml-2 text-terminal-primary">•</span>
             )}
@@ -92,7 +94,7 @@ export function ControlledTabs({
               }
             )}
           >
-            &gt; {tab.label}
+            &gt; <span className={tab.notImplemented ? 'line-through' : ''}>{tab.label}</span>
             {tab.hasChanges && (
               <span className="ml-2 text-terminal-primary">•</span>
             )}
