@@ -35,6 +35,8 @@ export function GameSectionTabs({ className }: GameSectionTabsProps) {
   const hasCompanyChanges = useSaveStore((s) => s.hasCompanyChanges);
   const hasServerChanges = useSaveStore((s) => s.hasServerChanges);
   const hasGangChanges = useSaveStore((s) => s.hasGangChanges);
+  const hasHacknetNodeChanges = useSaveStore((s) => s.hasHacknetNodeChanges);
+  const hasSourceFileChanges = useSaveStore((s) => s.hasSourceFileChanges);
 
   const sectionTabs: Tab[] = useMemo(() => [
     { id: 'player', label: 'Player', content: <PlayerSection />, hasChanges: hasPlayerStatChanges() || hasPlayerResourceChanges() },
@@ -44,8 +46,8 @@ export function GameSectionTabs({ className }: GameSectionTabsProps) {
     { id: 'servers', label: 'Servers', content: <ServersSection />, hasChanges: hasServerChanges() },
     { id: 'scripts', label: 'Scripts', content: <ScriptsSection />, notImplemented: true },
     { id: 'gangs', label: 'Gangs', content: <GangsSection />, hasChanges: hasGangChanges() },
-    { id: 'hacknet', label: 'Hacknet', content: <HacknetSection />, notImplemented: true },
-    { id: 'progression', label: 'Progression', content: <ProgressionSection />, notImplemented: true },
+    { id: 'hacknet', label: 'Hacknet', content: <HacknetSection />, hasChanges: hasHacknetNodeChanges() },
+    { id: 'progression', label: 'Progression', content: <ProgressionSection />, hasChanges: hasSourceFileChanges() },
     { id: 'business', label: 'Business', content: <BusinessSection />, notImplemented: true },
     { id: 'stock-market', label: 'Stock Market', content: <StockMarketSection />, notImplemented: true },
     { id: 'special', label: 'Special', content: <SpecialSection />, notImplemented: true },

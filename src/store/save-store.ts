@@ -84,6 +84,13 @@ interface SaveStoreState {
   removeHacknetNode: (index: number) => void;
   resetHacknetNodes: () => void;
   hasHacknetNodeChanges: () => boolean;
+  // Source Files & BitNode methods
+  updateSourceFileLevel: (bitNodeNumber: number, level: number) => void;
+  addSourceFile: (bitNodeNumber: number, level?: number) => void;
+  removeSourceFile: (bitNodeNumber: number) => void;
+  updateBitNodeN: (bitNodeNumber: number) => void;
+  resetSourceFiles: () => void;
+  hasSourceFileChanges: () => boolean;
   clearError: () => void;
 }
 
@@ -950,6 +957,70 @@ export const useSaveStore = create<SaveStoreState>((set, get) => ({
 
     return JSON.stringify(originalSave.PlayerSave.data.hacknetNodes) !==
       JSON.stringify(currentSave.PlayerSave.data.hacknetNodes);
+  },
+
+  // Source Files & BitNode methods
+  updateSourceFileLevel(bitNodeNumber, level) {
+    get().mutateCurrentSave((draft) => {
+      const sourceFiles = draft.PlayerSave.data.sourceFiles;
+      const existingIndex = sourceFiles.data.findIndex(([bn]) => bn === bitNodeNumber);
+      if (existingIndex !== -1) {
+        sourceFiles.data[existingIndex] = [bitNodeNumber, level];
+      }
+    });
+  },
+
+  addSourceFile(bitNodeNumber, level = 1) {
+    get().mutateCurrentSave((draft) => {
+      const sourceFiles = draft.PlayerSave.data.sourceFiles;
+      const existingIndex = sourceFiles.data.findIndex(([bn]) => bn === bitNodeNumber);
+      if (existingIndex === -1) {
+        // Insert in sorted order by BitNode number
+        const insertIndex = sourceFiles.data.findIndex(([bn]) => bn > bitNodeNumber);
+        if (insertIndex === -1) {
+          sourceFiles.data.push([bitNodeNumber, level]);
+        } else {
+          sourceFiles.data.splice(insertIndex, 0, [bitNodeNumber, level]);
+        }
+      }
+    });
+  },
+
+  removeSourceFile(bitNodeNumber) {
+    get().mutateCurrentSave((draft) => {
+      const sourceFiles = draft.PlayerSave.data.sourceFiles;
+      const existingIndex = sourceFiles.data.findIndex(([bn]) => bn === bitNodeNumber);
+      if (existingIndex !== -1) {
+        sourceFiles.data.splice(existingIndex, 1);
+      }
+    });
+  },
+
+  updateBitNodeN(bitNodeNumber) {
+    get().mutateCurrentSave((draft) => {
+      draft.PlayerSave.data.bitNodeN = bitNodeNumber;
+    });
+  },
+
+  resetSourceFiles() {
+    const { originalSave, currentSave } = get();
+    if (!originalSave || !currentSave) return;
+
+    const draft = cloneSave(currentSave);
+    draft.PlayerSave.data.sourceFiles = cloneSave(originalSave.PlayerSave.data.sourceFiles);
+    draft.PlayerSave.data.bitNodeN = originalSave.PlayerSave.data.bitNodeN;
+    set({ currentSave: draft });
+  },
+
+  hasSourceFileChanges() {
+    const { originalSave, currentSave } = get();
+    if (!originalSave || !currentSave) return false;
+
+    const sfChanged = JSON.stringify(originalSave.PlayerSave.data.sourceFiles) !==
+      JSON.stringify(currentSave.PlayerSave.data.sourceFiles);
+    const bnChanged = originalSave.PlayerSave.data.bitNodeN !== currentSave.PlayerSave.data.bitNodeN;
+
+    return sfChanged || bnChanged;
   },
 
   clearError() {
