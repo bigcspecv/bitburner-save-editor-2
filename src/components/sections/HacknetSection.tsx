@@ -585,9 +585,6 @@ export function HacknetSection() {
                   When SF9 is active, Hacknet uses <strong>Hacknet Servers</strong> instead of Hacknet Nodes.
                   You can view your Hacknet Servers in the <strong>Servers</strong> tab (look for hostnames starting with "hacknet-server-").
                 </p>
-                <p className="text-terminal-dim text-xs mt-3">
-                  The Hacknet Nodes editor is disabled because adding HacknetNode objects would cause the game to crash.
-                </p>
               </div>
             </div>
           </div>
