@@ -21,7 +21,7 @@ export function AppLayout({ subtitle, action, children }: AppLayoutProps) {
               <h1 className="text-4xl font-bold text-glow">
                 &gt; BITBURNER SAVE EDITOR v2.0
               </h1>
-              {subtitle && <p className="text-terminal-dim mt-1">{subtitle}</p>}
+              {subtitle && <div className="text-terminal-dim mt-1">{subtitle}</div>}
             </div>
             {action ? <div className="flex flex-wrap items-center gap-3">{action}</div> : null}
           </div>
