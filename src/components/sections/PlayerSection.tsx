@@ -30,6 +30,8 @@ const STAT_FIELDS: { key: keyof PlayerSkills; label: string }[] = [
 export function PlayerSection() {
   const player = useSaveStore((state) => state.currentSave?.PlayerSave.data);
   const originalPlayer = useSaveStore((state) => state.originalSave?.PlayerSave.data);
+  const stanekData = useSaveStore((state) => state.currentSave?.StaneksGiftSave);
+  const goData = useSaveStore((state) => state.currentSave?.GoSave);
   const updatePlayerExp = useSaveStore((state) => state.updatePlayerExp);
   const updatePlayerResources = useSaveStore((state) => state.updatePlayerResources);
   const resetPlayerStats = useSaveStore((state) => state.resetPlayerStats);
@@ -41,8 +43,14 @@ export function PlayerSection() {
 
   const allMultipliers = useMemo(() => {
     if (!player) return null;
-    return computeAllMultipliers(player);
-  }, [player]);
+    // Extract Stanek fragments data if available (schema is z.unknown, so we cast)
+    const stanekTyped = stanekData as { data?: { fragments?: Array<{ id: number; highestCharge: number; numCharge: number; x: number; y: number }> } } | undefined;
+    const stanekFragments = stanekTyped?.data?.fragments;
+    // Extract Go stats if available (schema is z.unknown, so we cast)
+    const goTyped = goData as { stats?: Record<string, { nodePower?: number; wins?: number; losses?: number }> } | undefined;
+    const goStats = goTyped?.stats;
+    return computeAllMultipliers(player, stanekFragments ? { fragments: stanekFragments } : null, goStats);
+  }, [player, stanekData, goData]);
 
   const allSkillLevels = useMemo(() => {
     if (!player) return null;

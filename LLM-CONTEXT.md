@@ -738,7 +738,28 @@ Run tests: `npm run test`
 - **Faction discovery values**: Real saves use `"known"`, `"unknown"`, and `"rumored"` (not `"rumor"`); normalize `"rumor"` to `"rumored"` if encountered.
 - **VersionSave type**: The stringified value parses to a JSON number (e.g., `"43"` -> `43`); accept numeric or string inputs but coerce to a number during parsing.
 - **Player multipliers**: These are derived (augs/bitnode/source files/entropy) and should remain read-only; if displayed before recalculation wiring exists, label as informational/not recalculated yet.
-- **Multiplier calculator**: `src/lib/multiplier-calculator.ts` recomputes all player multipliers from Source-File 1/2/5 (see field coverage), BitNode HackingLevelMultiplier (where applicable), exploit bonuses (1.001^exploits on eligible fields), and augs we currently map (NFG across all, BitWire, Neurotrainer I exp bonuses, Synaptic Enhancement Implant hacking_speed) plus donation bonus. Player section shows saved vs computed multipliers with rounding/tolerance; vitest in `src/lib/multiplier-calculator.test.ts`.
+- **Multiplier calculator**: `src/lib/multiplier-calculator.ts` recomputes all player multipliers from:
+  - **Source Files**: SF1, SF2, SF3, SF5, SF6, SF7, SF8, SF9, SF11 (each with specific field coverage and scaling formulas)
+  - **BitNode multipliers**: HackingLevelMultiplier where applicable (BN2/3/6/7/8/9/10)
+  - **Exploit bonuses**: 1.001^exploits on eligible fields
+  - **Augmentations**: All augs from AUGMENTATION_DATA plus special handling for variable augmentations (see below)
+  - **Stanek's Gift fragments**: Uses formula `1 + (ln(highestCharge + 1) / 60) * ((numCharge + 1) / 5)^0.07 * power * boost * stanekPowerMult`. Fragment types affect different multipliers (Rep affects company_rep/faction_rep, WorkMoney affects work_money, etc.). Note: Simplified calculation doesn't account for booster fragment adjacency.
+  - **Go/IPvGO bonuses**: Uses formula `1 + ln(nodes + 1) * (nodes + 1)^0.3 * 0.002 * bonusPower * goPowerMult * sourceFileBonus`. Different opponents affect different multipliers (Daedalus affects company_rep/faction_rep, Netburners affects hacknet_node_money, etc.).
+
+  **Variable Augmentation Handling** (critical for matching saved values exactly):
+
+  - **Unstable Circadian Modulator**: This augmentation has 7 possible bonus configurations that rotate hourly based on real-world time. The calculator detects which bonus set was active when the save was created by comparing saved vs computed multipliers:
+    - Hacking Performance: hacking_chance 1.25, hacking_speed 1.1, hacking_money 1.25, hacking_grow 1.1
+    - Hacking Skill: hacking 1.15, hacking_exp 2
+    - Combat Stats: strength/defense/dexterity/agility 1.25, *_exp 2
+    - Charisma: charisma 1.5, charisma_exp 2
+    - Hacknet: hacknet_node_money 1.2, hacknet_node_*_cost 0.85
+    - Work & Reputation: company_rep 1.25, faction_rep 1.15, work_money 1.7
+    - Crime: crime_success 2, crime_money 2
+
+  - **NeuroFlux Governor donation bonus**: The game's NFG multiplier is `(1.01 + CONSTANTS.Donations / 1e8)` per level, not exactly 1.01. Since `CONSTANTS.Donations` changes over time (currently ~212, was ~179 earlier), the calculator infers the exact per-level multiplier from the ratio of saved vs computed values. With 300+ NFG levels, even a 0.000002 difference per level compounds to ~0.05% total difference.
+
+  **Principle**: The save file is the source of truth. Instead of using hardcoded values that could differ between game versions, we infer variable bonuses from what's actually stored in the save. This makes the editor robust regardless of when or on which game version the save was created.
 - **Player skill levels**: All skill levels (hacking/combat/cha) are recomputed from EXP and multipliers on load; editing level values in the save has no lasting effect. UI should treat levels as read-only and surface EXP editing instead. `src/lib/level-calculator.ts` mirrors the in-game formula (32*log(exp+534.6)-200 with clamp) and applies BitNode LevelMultipliers (BN2/3 hacking 0.8, BN6/7 hacking 0.35, BN9 hacking 0.5 + combat/cha 0.45, BN10 hacking 0.35 + others 0.4, BN11 hacking 0.6, BN12 all stats decaying by 1.02^level, BN13 hacking 0.25 + combat 0.7, BN14 hacking 0.4 + combat 0.5). It uses active source file level for the current BitNode (overrides respected) to drive BN12 decay. Player section now shows original saved level vs computed level per stat.
 
 ---
@@ -929,6 +950,7 @@ Faction cards display:
 
 *Track significant updates to this context document here.*
 
+- **2025-12-01** - Multiplier calculator now matches saved values exactly by inferring variable bonuses: (1) Unstable Circadian Modulator detection - identifies which of 7 time-based bonus sets was active when save was created; (2) NeuroFlux Governor donation bonus inference - derives exact per-level multiplier from saved/computed ratio since CONSTANTS.Donations changes over time. Principle: save file is source of truth, not hardcoded game values.
 - **2025-11-30** - Gang section implemented with overview panel (Stats, Faction, Settings, Current Rates columns) and tab scaffold (Members, Equipment, Territory). Overview includes editable gang stats (respect, wanted, territory clash chance as 0-100%), gang settings toggles (territory warfare, notify on death), and read-only rates. Gang faction reputation/favor surfaced in Gang section for convenience (same fields as Factions page). Store exposes `updateGangStats`, `resetGang`, and `hasGangChanges`. Reset and change detection include the gang faction's data so "Reset All Gang Data" also resets faction rep/favor. Company schema updated to make `playerReputation` optional with default 0 (fixes saves where companies have only favor).
 - **2025-11-30** - Added critical documentation about JavaScript object key ordering issue with `JSON.stringify()` in "Common Pitfalls" section. When resetting data that involves deleting/re-adding object keys (like purchased servers), the entire object must be rebuilt in original key order to ensure `hasChanges()` detection works correctly. Includes code example, debugging approach, and scenarios where this pattern applies.
 - **2025-11-29** - Augmentation data updated with complete list from Bitburner v2.6.2 source (123 augmentations total). Corrected naming: SoA augmentations now use "SoA - " prefix (e.g., "SoA - Beauty of Aphrodite"); "EsperTech Bladeburner Eyewear" (not "Esper Eyewear"); "GOLEM Serum" (not "Golem Serum"); "I.N.T.E.R.L.I.N.K.E.D" (with periods). Includes all 9 Shadows of Anarchy augmentations, all 17 Bladeburner augmentations, all 3 Stanek's Gift augmentations, and NeuroFlux Governor with complete multiplier data.

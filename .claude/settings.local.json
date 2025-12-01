@@ -18,7 +18,8 @@
       "Bash(gunzip:*)",
       "Bash(npm test:*)",
       "Bash(git add:*)",
-      "Bash(npx vite build)"
+      "Bash(npx vite build)",
+      "Bash(npx tsx:*)"
     ],
     "deny": [],
     "ask": []
