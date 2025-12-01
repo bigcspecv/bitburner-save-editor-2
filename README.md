@@ -1,6 +1,32 @@
+## ⚠️🚨 CRITICAL WARNING - READ BEFORE USE 🚨⚠️
+
+> **THIS TOOL CAN PERMANENTLY CRASH YOUR GAME.**
+
+Using this save editor carries significant risk. Improper modifications can cause:
+
+- **Permanent game crashes** requiring complete manual deletion of all game data
+- **Loss of all game progress** with no way to recover
+- **Corrupted saves** that cannot be loaded or repaired
+- **Unexpected game behavior** that may not be immediately obvious
+
+### Before You Continue:
+
+1. **ALWAYS export a backup** of your save file before making ANY changes
+2. **Store backups in a separate location** (cloud storage, different folder, etc.)
+3. **Test your modified save immediately** after importing - don't wait hours to discover issues
+4. **Be prepared to lose everything** - seriously, this has happened multiple times
+
+### You Have Been Warned
+
+**Continue at your own risk.** The maintainers are not responsible for lost progress, corrupted saves, or the hours of gameplay you may need to repeat. If you're not comfortable with potentially losing your save, **do not use this tool**.
+
+---
+
 # Bitburner Save Editor V2
 
-> 🖥️ **Terminal-styled save editor for [Bitburner](https://store.steampowered.com/app/1812820/Bitburner/)**
+> 🖥️ **Terminal-styled save editor for open source hacking game [Bitburner](https://github.com/bitburner-official/bitburner-src) ([Steam](https://store.steampowered.com/app/1812820/Bitburner/))**
+
+---
 
 A web-based save file editor with a retro terminal aesthetic that matches Bitburner's cyberpunk hacker theme. Upload your save, modify stats/factions/companies/servers, and download a fresh save ready to import back into the game.
 
