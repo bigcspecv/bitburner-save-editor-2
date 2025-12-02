@@ -101,6 +101,11 @@ interface SaveStoreState {
   updateSettings: (updates: Record<string, unknown>) => void;
   resetSettings: () => void;
   hasSettingsChanges: () => boolean;
+  // Exploit methods
+  addExploit: (exploit: string) => void;
+  removeExploit: (exploit: string) => void;
+  resetExploits: () => void;
+  hasExploitChanges: () => boolean;
   clearError: () => void;
 }
 
@@ -1131,6 +1136,48 @@ export const useSaveStore = create<SaveStoreState>((set, get) => ({
     if (!originalSave || !currentSave) return false;
 
     return JSON.stringify(originalSave.SettingsSave) !== JSON.stringify(currentSave.SettingsSave);
+  },
+
+  // Exploit methods
+  addExploit(exploit) {
+    const originalExploits = get().originalSave?.PlayerSave.data.exploits ?? [];
+    get().mutateCurrentSave((draft) => {
+      const currentExploits = draft.PlayerSave.data.exploits || [];
+      if (!currentExploits.includes(exploit)) {
+        // Insert at original index if it existed there, otherwise append
+        const originalIndex = originalExploits.indexOf(exploit);
+        if (originalIndex !== -1) {
+          draft.PlayerSave.data.exploits = insertAtIndex(currentExploits, exploit, originalIndex);
+        } else {
+          draft.PlayerSave.data.exploits = [...currentExploits, exploit];
+        }
+      }
+    });
+  },
+
+  removeExploit(exploit) {
+    get().mutateCurrentSave((draft) => {
+      draft.PlayerSave.data.exploits = draft.PlayerSave.data.exploits.filter(
+        (e) => e !== exploit
+      );
+    });
+  },
+
+  resetExploits() {
+    const { originalSave, currentSave } = get();
+    if (!originalSave || !currentSave) return;
+
+    const draft = cloneSave(currentSave);
+    draft.PlayerSave.data.exploits = cloneSave(originalSave.PlayerSave.data.exploits);
+    set({ currentSave: draft });
+  },
+
+  hasExploitChanges() {
+    const { originalSave, currentSave } = get();
+    if (!originalSave || !currentSave) return false;
+
+    return JSON.stringify(originalSave.PlayerSave.data.exploits) !==
+      JSON.stringify(currentSave.PlayerSave.data.exploits);
   },
 
   clearError() {

@@ -33,6 +33,9 @@ export type { TableProps, TableHeaderProps, TableCellProps, TableRowProps } from
 export { Modal, ConfirmModal } from './Modal';
 export type { ModalProps, ConfirmModalProps } from './Modal';
 
+export { TerminalWindow } from './TerminalWindow';
+export type { TerminalWindowProps } from './TerminalWindow';
+
 export { Tabs, ControlledTabs } from './Tabs';
 export type { TabsProps, ControlledTabsProps, Tab } from './Tabs';
 

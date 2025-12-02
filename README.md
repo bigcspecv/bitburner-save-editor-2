@@ -180,9 +180,9 @@ The editor is organized by **gameplay concepts**, not save file structure:
   - [x] Hacknet nodes (add/edit/remove)
   - [ ] Hash manager & upgrades
 - [ ] Progression section
-  - [ ] BitNode & source files
+  - [x] BitNode & source files
   - [ ] Playtime tracking
-  - [ ] Exploits display
+  - [x] Exploits editor
 - [ ] Stock Market section
   - [ ] Orders viewer/editor
   - [ ] Access flags
